@@ -1,4 +1,4 @@
-<?
+<? $AUTH='admin';
 #
 # updates demogrphic group and nutrient threshold information for aging users
 #

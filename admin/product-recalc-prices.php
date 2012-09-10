@@ -1,4 +1,4 @@
-<?
+<? $AUTH='admin';
 #
 # calculates "suggested" prices for products
 # also fills in the average net weight/volume and typical units-per-pack

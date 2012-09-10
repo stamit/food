@@ -1,6 +1,6 @@
 Order deny,allow
 Deny from all
-Allow from 127.0.0.1
+Allow from all
 
 php_flag magic_quotes_gpc Off
 php_flag magic_quotes_runtime Off

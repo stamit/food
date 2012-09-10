@@ -1,4 +1,4 @@
-<?
+<? $AUTH='admin';
 #
 # deletes user registrations that have not been confirmed within a specified
 # amount of time

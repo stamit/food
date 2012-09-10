@@ -1,4 +1,4 @@
-<?
+<? $AUTH='admin';
 ini_set('include_path',dirname(dirname(__FILE__)));
 require_once 'app/init.php';
 require_once 'lib/validation.php';

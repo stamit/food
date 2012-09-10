@@ -1,4 +1,4 @@
-<?
+<? $AUTH='admin';
 	require_once 'app/init.php';
 	$uri = '/admin/test?__1=%7B%22foo%22%3A%22bar%22%7D';
 ?>
