@@ -1,0 +1,96 @@
+<? $AUTH=true;
+	require_once 'app/init.php';
+	require_once 'app/data.php';
+	require_once 'lib/maketable/fun.php';
+
+	include 'app/begin.php';
+	maketable(array(
+		'self'=>$URL.'/receipt-children',
+		'params'=>array(
+			'id'=>$row['id'],
+		),
+		'key'=>'id',
+		'join'=>array(
+			'receipt'=>array(
+				'user_id'=>sql(intval($_SESSION['user_id'])),
+				'parent'=>maketable_param('id',$row['id']),
+			),
+			array('product',array('id'=>'receipt.product'),'group'),
+		),
+		'columns'=>array(
+			'receipt.product'=>array(
+				'Product', 'product_name_html',
+				'search'=>'mid',
+				'search_in'=>'product.name',
+				'edit'=>'dropdown',
+				'opts_sql'=>'SELECT id AS value, name AS text'
+				            .' FROM product ORDER BY name',
+				'width'=>'220px',
+				'size'=>'216px',
+			),
+			'receipt.units'=>array('Units',
+				'class'=>'number',
+				'edit'=>'number',
+				'width'=>'30px',
+				'size'=>3,
+			),
+			'receipt.length'=>array('Length',
+				'class'=>'number',
+				'edit'=>'number',
+				'postfix'=>'m',
+				'width'=>'30px',
+				'size'=>3,
+			),
+			'receipt.area'=>array('Area',
+				'class'=>'number',
+				'edit'=>'number',
+				'postfix'=>'m²',
+				'width'=>'30px',
+				'size'=>3,
+			),
+			'receipt.net_volume'=>array('Volume',
+				'class'=>'number',
+				'edit'=>'number',
+				'postfix'=>'ml',
+				'width'=>'40px',
+				'size'=>3,
+			),
+			'receipt.weight'=>array('G.weight',
+				'class'=>'number',
+				'edit'=>'number',
+				'postfix'=>'g',
+				'width'=>'40px',
+				'size'=>3,
+				'tip'=>'Gross weight',
+			),
+			'receipt.net_weight'=>array('Net weight',
+				'class'=>'number',
+				'edit'=>'number',
+				'postfix'=>'g',
+				'width'=>'40px',
+				'size'=>3,
+			),
+			'receipt.amount'=>array('Price',
+				'class'=>'number',
+				'prefix'=>'€',
+				'edit'=>'number',
+				'width'=>'40px',
+				'size'=>3,
+			),
+			'receipt.notes'=>array('Notes',
+				'size'=>25,
+				'width'=>'150px',
+			),
+		),
+		'orderby'=>'issued',
+		'userorder'=>true,
+
+		'update'=>1,
+		'updateinc'=>'receipt.php',
+
+		'delete'=>1,
+		'deleteinc'=>'receipt.php',
+		'deleteneg'=>true,
+	));
+	return include 'app/end.php';
+?>

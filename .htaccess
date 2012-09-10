@@ -1,0 +1,13 @@
+AddType application/x-httpd-php .php
+Options +MultiViews -ExecCGI -Indexes -Includes
+
+<IfModule mod_headers.c>
+	Header unset Content-Location
+	ErrorHeader unset Content-Location
+</IfModule>
+
+php_flag magic_quotes_gpc Off
+php_flag magic_quotes_runtime Off
+php_flag magic_quotes_sybase Off
+php_flag expose_php Off
+php_value include_path ".:..:../..:../../..:../../../.."

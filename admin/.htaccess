@@ -1,0 +1,9 @@
+Order deny,allow
+Deny from all
+Allow from 127.0.0.1
+
+php_flag magic_quotes_gpc Off
+php_flag magic_quotes_runtime Off
+php_flag magic_quotes_sybase Off
+php_flag expose_php Off
+php_value include_path ".:..:../..:../../..:../../../..:../../../../.."

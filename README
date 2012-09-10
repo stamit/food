@@ -1,0 +1,9 @@
+This is a PHP/Javascript web application about food and nutrients. It can help
+you figure out what to eat.
+
+To set up, you need Apache with the PHP module and a MySQL database server
+(currently only works with MySQL).
+
+This software is given to you under the terms of version 3 the GNU General
+Public License, as published by the Free Software Foundation (see www.fsf.org).
+THERE IS NO IMPLIED WARRANTY OF ANY KIND. See the file COPYING for details.

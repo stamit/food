@@ -1,0 +1,18 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<script src="../lib/util.js" type="text/javascript"></script>
+<script src="../lib/mouse.js" type="text/javascript"></script>
+<script src="../lib/dragdrop.js" type="text/javascript"></script>
+<title>Drag&amp;drop test</title>
+<style>
+	span.draghighlight { color:blue; }
+</style>
+
+<p>Drag <span id="fdsa"
+	onselectstart="return false"
+	onmousedown="return begin_drag('fdsa','stuff');"
+>foo</span>
+and drop on
+<span id="asdf"
+	onmousemove="if(event.dragdrop) accept_drag(event,'asdf');"
+	onmouseup="if(event.dragdrop) alert(repr(event.data));"
+>bar</span>.</p>
