@@ -23,8 +23,6 @@
 
 		if ($row['weight']!==null && $row['weight']<0)
 			mistake('volume','No negative values.');
-			#mistake('weight','Αυτό σημαίνει ότι ξέρασες '
-			#     .html(-$row['weight']/1000.0).' κιλά έτοιμο προϊόν;');
 
 		if ($row['volume']!==null && $row['volume']<0)
 			mistake('volume','No negative values.');
