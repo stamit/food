@@ -43,21 +43,21 @@
 		$tip_parts = array();
 
 		if ($threshold['min'] !== null) {
-			$tip_parts[] = 'ελάχιστο: '.number_format(
+			$tip_parts[] = 'min: '.number_format(
 				$threshold['min'],
 				$nut['decimals']
 			).$nut['unit'];
 		}
 
 		if ($threshold['best'] !== null) {
-			$tip_parts[] = 'στόχος: '.number_format(
+			$tip_parts[] = 'best: '.number_format(
 				$threshold['best'],
 				$nut['decimals']
 			).$nut['unit'];
 		}
 
 		if ($threshold['max'] !== null) {
-			$tip_parts[] = 'μέγιστο: '.number_format(
+			$tip_parts[] = 'max: '.number_format(
 				$threshold['max'],
 				$nut['decimals']
 			).$nut['unit'];
