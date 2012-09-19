@@ -103,11 +103,33 @@
 			}
 		}
 
-		if ($row['store_duration']!==null) {
-			if ($row['store_duration']<0) {
-				mistake('store_duration', 'Must not be negative.');
-			}
-		}
+		if ($row['typical_price']!==null && $row['typical_price']<0)
+			mistake('typical_price', 'Must not be negative.');
+		if ($row['typical_units']!==null && $row['typical_units']<0)
+			mistake('typical_units', 'Must not be negative.');
+		if ($row['store_duration']!==null && $row['store_duration']<0)
+			mistake('store_duration', 'Must not be negative.');
+		if ($row['store_temp_min']!==null && ($row['store_temp_min']<-99 || $row['store_temp_min']>99))
+			mistake('store_temp_min', 'Must not be negative.');
+		if ($row['store_temp_max']!==null && ($row['store_temp_max']<-99 || $row['store_temp_max']>99))
+			mistake('store_temp_max', 'Must not be negative.');
+		if ($row['packaging_weight']!==null && $row['packaging_weight']<0)
+			mistake('packaging_weight', 'Must not be negative.');
+		if ($row['glaze_weight']!==null && $row['glaze_weight']<0)
+			mistake('glaze_weight', 'Must not be negative.');
+		if ($row['net_weight']!==null && $row['net_weight']<0)
+			mistake('net_weight', 'Must not be negative.');
+		if ($row['net_volume']!==null && $row['net_volume']<0)
+			mistake('net_volume', 'Must not be negative.');
+		if ($row['sample_weight']!==null && $row['sample_weight']<0)
+			mistake('sample_weight', 'Must not be negative.');
+		if ($row['sample_volume']!==null && $row['sample_volume']<0)
+			mistake('sample_volume', 'Must not be negative.');
+		if ($row['refuse_weight']!==null && $row['refuse_weight']<0)
+			mistake('refuse_weight', 'Must not be negative.');
+		if ($row['refuse_volume']!==null && $row['refuse_volume']<0)
+			mistake('refuse_volume', 'Must not be negative.');
+
 		$sdm = ( $_POST['store_duration_months']!==null
 		         && $_POST['store_duration_months']!=='' )
 			? intval($_POST['store_duration_months'])

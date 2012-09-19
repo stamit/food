@@ -36,6 +36,18 @@
 				$row['person'] = value('SELECT owner FROM store WHERE id='.sql($row['store']));
 			if ($row['parent']!==null && $row['product']===null)
 				mistake('product','Unknown product?');
+			if ($row['length']!==null && $row['length']<=0)
+				mistake('length','Length must be positive, or empty.');
+			if ($row['area']!==null && $row['area']<=0)
+				mistake('area','Area must be positive, or empty.');
+			if ($row['volume']!==null && $row['volume']<=0)
+				mistake('volume','Volume must be positive, or empty.');
+			if ($row['weight']!==null && $row['weight']<=0)
+				mistake('weight','Weight must be positive, or empty.');
+			if ($row['net_weight']!==null && $row['net_weight']<=0)
+				mistake('net_weight','Net weight must be positive, or empty.');
+			if ($row['amount']!==null && $row['amount']<=0)
+				mistake('amount','Price must be positive.');
 
 			if ($row['parent']!==null &&
 			    $row['units']===null &&

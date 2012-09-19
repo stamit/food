@@ -9,6 +9,7 @@ function validate_email($email,$id) {
 
 function validate_telephone(&$phone,$id,$country_code=null) {
 	$phone = str_replace('.','',trim($phone));
+	$phone = str_replace('-','',trim($phone));
 	$phone = preg_replace('/\s+/','',$phone);
 	$phone = preg_replace('/^00/','+',$phone);
 
