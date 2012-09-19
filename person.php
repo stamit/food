@@ -29,9 +29,8 @@
 		if (!has_right('register-persons'))
 			mistake('You are not allowed to register persons.');
 
-		if (!has_right('admin') || $row['user_id']===null) {
+		if (!has_right('admin') || $row['user_id']===null)
 			$row['user_id'] = $_SESSION['user_id'];
-		}
 
 		if ($row['id']===null || $row['id']>0) {
 			$row['name'] = trim($row['name']);
@@ -85,7 +84,7 @@
 	} else {
 		$HEADING = 'New person';
 	}
-	$BREAD = array($URL=>'αρχική', 'persons'=>'πρόσωπα');
+	$BREAD = array($URL=>'home', 'persons'=>'person');
 ?>
 <? include 'app/begin.php' ?>
 

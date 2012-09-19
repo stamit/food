@@ -10,13 +10,14 @@
 	if (posting()) try {
 		$row['id'] = $_SESSION['user_id'];
 
-		if (strcmp(today(),$row['birth'])<0) {
-			mistake('birth','The date is in the future.');
+		if ($row['birth']!==null) {
+			//$row['birth'] = date_encode($row['birth']);
+			if (strcmp(today(),$row['birth'])<0)
+				mistake('birth','The date is in the future.');
 		}
 
-		if ($row['pregnancy']!=0 && $row['gender']!=1) {
+		if ($row['gender']==0 && $row['pregnancy']!=0)
 			mistake('pregnancy','Male pregnancy?');
-		}
 
 		if (!$MISTAKES) {
 			$demo = find_demographic_group($row);

@@ -3,7 +3,7 @@
 	require_once 'lib/regional.php';
 
 	$HEADING = 'Receipts';
-	$BREAD = array($URL=>'αρχική');
+	$BREAD = array($URL=>'home');
 ?>
 <? include 'app/begin.php' ?>
 
