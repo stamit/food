@@ -7,3 +7,18 @@ accessible without any change in code, thanks to lib/adodb.
 
 `all' and `part?.txt' is a list of all nutrient types. I don't remember where I
 found this list.
+
+The contents of `usda-sr25.txt' come from the PDF in the USDA nutrient database
+distribution from this URL:
+
+	http://www.ars.usda.gov/Services/docs.htm?docid=22771
+
+`usda-import.py' is a Python script that will take the `usda-sr25.txt' as
+standard input and produce SQL statements for MySQL or PostreSQL that will
+create and fill the database tables. Run this script from the directory where
+you extracted the ZIP file from the above URL. For example, if you extracted
+the ZIP in directory `sr25' under this directory (doc) and you are using MySQL
+database `usda', then this should work:
+
+	cd sr25
+	python ../usda-import.py <../usda-sr25.txt | mysql usda

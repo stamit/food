@@ -1,0 +1,95 @@
+food_des --Food Description File
+NDB_No      A 5*  N --5-digit Nutrient Databank number that uniquely identifies a food item. If this field is defined as numeric, the leading zero will be lost.
+FdGrp_Cd    A 4   N fd_group.FdGrp_Cd --4-digit code indicating food group to which a food item belongs.
+Long_Desc   A 200 N --200-character description of food item.
+Shrt_Desc   A 60  N --60-character abbreviated description of food item.  Generated from the 200-character description using abbreviations in Appendix A. If short description is longer than 60 characters, additional abbreviations are made.
+ComName     A 100 Y --Other names commonly used to describe a food, including local or regional names for various foods, for example, "soda" or "pop" for "carbonated beverages."
+ManufacName A 65  Y --Indicates the company that manufactured the product, when appropriate.
+Survey      A 1   Y --Indicates if the food item is used in the USDA Food and Nutrient Database for Dietary Studies (FNDDS) and thus has a complete nutrient profile for the 65 FNDDS nutrients.
+Ref_desc    A 135 Y --Description of inedible parts of a food item (refuse), such as seeds or bone.
+Refuse      N 2   Y --Percentage of refuse.
+SciName     A 65  Y --Scientific name of the food item. Given for the least processed form of the food (usually raw), if applicable.
+N_Factor    N 4.2 Y --Factor for converting nitrogen to protein (see p. 12).
+Pro_Factor  N 4.2 Y --Factor for calculating calories from protein (see p.  13).
+Fat_Factor  N 4.2 Y --Factor for calculating calories from fat (see p. 13).
+CHO_Factor  N 4.2 Y --Factor for calculating calories from carbohydrate (see p. 13).
+
+fd_group --Food Group Description File
+FdGrp_Cd   A 4* N --4-digit code identifying a food group. Only the first 2 digits are currently assigned. In the future, the last 2 digits may be used. Codes may not be consecutive.
+FdGrp_Desc A 60 N --Name of food group.
+
+langual --LanguaL Factor File
+NDB_No      A 5* N food_des.NDB_No --5-digit Nutrient Databank number that uniquely identifies a food item. If this field is defined as numeric, the leading zero will be lost.
+Factor_Code A 5* N langdesc.Factor_Code --The LanguaL factor from the Thesaurus
+
+langdesc --LanguaL Factors Description File
+Factor_Code A 5*  N --The LanguaL factor from the Thesaurus. Only those codes used to factor the foods contained in the LanguaL Factor file are included in this file
+Description A 140 N --The description of the LanguaL Factor Code from the thesaurus
+
+nut_data --Nutrient Data File
+NDB_No        A 5*   N food_des.NDB_No --5-digit Nutrient Databank number.
+Nutr_No       A 3*   N nutr_def.Nutr_No --Unique 3-digit identifier code for a nutrient .
+Nutr_Val      N 10.3 N --Amount in 100 grams, edible portion .
+Num_Data_Pts  N 5.0  N --Number of data points (previously called Sample_Ct) is the number of analyses used to calculate the nutrient value. If the number of data points is 0, the value was calculated or imputed.
+Std_Error     N 8.3  Y --Standard error of the mean. Null if cannot be calculated. The standard error is also not given if the number of data points is less than three.
+Src_Cd        A 2    N src_cd.Src_Cd --Code indicating type of data.
+Deriv_Cd      A 4    Y deriv_cd.Deriv_Cd --Data Derivation Code giving specific information on how the value is determined
+Ref_NDB_No    A 5    Y --NDB number of the item used to impute a missing value. Populated only for items added or updated starting with SR14.
+Add_Nutr_Mark A 1    Y --Indicates a vitamin or mineral added for fortification or enrichment. This field is populated for ready-to-eat breakfast cereals and many brand-name hot cereals in food group 8.
+Num_Studies   N 2    Y --Number of studies.
+Min           N 10.3 Y --Minimum value.
+Max           N 10.3 Y --Maximum value.
+DF            N 2    Y --Degrees of freedom.
+Low_EB        N 10.3 Y --Lower 95% error bound.
+Up_EB         N 10.3 Y --Upper 95% error bound.
+Stat_cmt      A 10   Y --Statistical comments. See definitions below.
+AddMod_Date   A 10   Y --Indicates when a value was either added to the database or last modified.
+CC            A 1    Y --Confidence Code indicating data quality, based on evaluation of sample plan, sample handling, analytical method, analytical quality control, and number of samples analyzed. Not included in this release, but is planned for future releases.
+
+nutr_def --Nutrient Definition File
+Nutr_No  A 3* N --Unique 3-digit identifier code for a nutrient.
+Units    A 7  N --Units of measure (mg, g, g, and so on).
+Tagname  A 20 Y --International Network of Food Data Systems (INFOODS) Tagnames. A unique abbreviation for a nutrient/food component developed by INFOODS to aid in the interchange of data.
+NutrDesc A 60 N --Name of nutrient/food component.
+Num_Dec  A 1  N --Number of decimal places to which a nutrient value is rounded.
+SR_Order N 6  N --Used to sort nutrient records in the same order as various reports produced from SR.
+
+src_cd --Source Code File
+Src_Cd     A 2* N --2-digit code.
+SrcCd_Desc A 60 N --Description of source code that identifies the type of nutrient data.
+
+deriv_cd --Data Derivation File
+Deriv_Cd   A 4*  N --Derivation Code.
+Deriv_Desc A 120 N --Description of derivation code giving specific information on how the value was determined.
+
+weight --Gram Weight File
+NDB_No       A 5*  N food_des.NDB_No --5-digit Nutrient Databank number.
+Seq          A 2*  N --Sequence number.
+Amount       N 5.3 N --Unit modifier (for example, 1 in "1 cup").
+Msre_Desc    A 80  N --Description (for example, cup, diced, and 1-inch pieces).
+Gm_Wgt       N 7.1 N --Gram weight.
+Num_Data_Pts N 3   Y --Number of data points.
+Std_Dev      N 7.3 Y --Standard deviation.
+
+footnote --Footnote File
+NDB_No     A 5   N food_des.NDB_No --5-digit Nutrient Databank number.
+Footnt_No  A 4   N --Sequence number. If a given footnote applies to more than one nutrient number, the same footnote number is used.  As a result, this file cannot be indexed.
+Footnt_Typ A 1   N --Type of footnote: D = footnote adding information to the food description; M = footnote adding information to measure description; N = footnote providing additional information on a nutrient value. If the Footnt_typ = N, the Nutr_No will also be filled in.
+Nutr_No    A 3   Y --Unique 3-digit identifier code for a nutrient to which footnote applies.
+Footnt_Txt A 200 N --Footnote text.
+
+datsrcln --Sources of Data Link File
+NDB_No     A 5* N food_des.NDB_No --5-digit Nutrient Databank number.
+Nutr_No    A 3* N nutr_def.Nutr_No --Unique 3-digit identifier code for a nutrient.
+DataSrc_ID A 6* N data_src.DataSrc_ID --Unique ID identifying the reference/source.
+
+data_src --Sources of Data File
+DataSrc_ID  A 6*  N --Unique number identifying the reference/source.
+Authors     A 255 Y --List of authors for a journal article or name of sponsoring organization for other documents.
+Title       A 255 N --Title of article or name of document, such as a report from a company or trade association.
+Year        A 4   Y --Year article or document was published.
+Journal     A 135 Y --Name of the journal in which the article was published.
+Vol_City    A 16  Y --Volume number for journal articles, books, or reports; city where sponsoring organization is located.
+Issue_State A 5   Y --Issue number for journal article; State where the sponsoring organization is located.
+Start_Page  A 5   Y --Starting page number of article/document.
+End_Page    A 5   Y --Ending page number of article/document.
