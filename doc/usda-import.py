@@ -1,5 +1,5 @@
 #
-# * reads schema.txt as standard input and (uppercase-named) files in working directory
+# * reads schema.txt as standard input and UPPERCASE.txt files in working directory
 # * produces SQL statements for importing database into MySQL or PostgreSQL
 #
 # any table reference cycles might not be handled properly
@@ -54,7 +54,7 @@ def readschema(f):
 
 			if len(words)==1 or words[1]=='T':
 				tablename = words[0]
-				if not re.match('[A-Za-z_]*$', tablename):
+				if not re.match('[A-Za-z_][A-Za-z0-9_]*$', tablename):
 					raise Exception('can only handle alphanumeric characters and underscores in table names: %s'%line)
 
 				curtable = tables[tablename] = []
