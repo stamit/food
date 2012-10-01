@@ -5,7 +5,7 @@
 if ( $DEPTH<=0 && !$INLINE_REQUEST ) {
 
 ?></td></tr>
-<tr><td class="footer">
+<tr class="footer"><td class="footer">
 	<?
 		list($usec,$sec) = explode(' ', microtime());
 		$STOPWATCH = ((float)$usec + (float)$sec) - $STOPWATCH;

@@ -34,16 +34,19 @@ if ( $DEPTH <= 0 && !$INLINE_REQUEST ) {
 
 ?><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <head profile="http://www.w3.org/2005/10/profile">
-<meta http-equiv="Content-Script-Type" content="text/javascript">
+	<meta http-equiv="Content-Script-Type" content="text/javascript">
 <? if (is_string($ICON)) { ?>
-<link rel="icon" type="image/png" href="<?=html($URL.'/'.$ICON)?>">
+	<link rel="icon" type="image/png" href="<?=html($URL.'/'.$ICON)?>">
 <? } ?>
-<script type="text/javascript">var the_url=<?=js(ifnull($URL,''))?></script>
-<? foreach ($DEFAULT_JS as $js) include_script($URL.$js); ?>
+	<script type="text/javascript">var the_url=<?=js(ifnull($URL,''))?></script>
+<? foreach ($DEFAULT_JS as $js) { ?>
+	<? include_script($URL.$js); ?>
+<? } ?>
 <? foreach ($DEFAULT_CSS as $css) { ?>
-<link rel="stylesheet" type="text/css" href="<?=html($URL.$css)?>">
+	<link rel="stylesheet" type="text/css" href="<?=html($URL.$css)?>">
 <? } ?>
-<title><?=$TITLE?$TITLE:strip_tags($HEADING?$HEADING:'')?></title>
+
+	<title><?=$TITLE?$TITLE:strip_tags($HEADING?$HEADING:'')?></title>
 </head>
 
 <body onload="convert_links(document);<? if (strlen($ONLOAD)) echo html($ONLOAD); ?>">
