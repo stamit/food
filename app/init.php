@@ -109,7 +109,7 @@ if (function_exists('getallheaders')) {
 	}
 }
 $INLINE_REQUEST=0;
-if ($HEADERS['X-Requested-With']=='XMLHttpRequest') {
+if (strpos($HEADERS['X-Requested-With'],'XMLHttpRequest')!==FALSE) {
 	$INLINE_REQUEST=1;
 	# all XMLHttpRequest requests are in UTF-8
 	$GET_PARAMS_ENCODING = 'UTF-8';
