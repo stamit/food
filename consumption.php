@@ -1,7 +1,7 @@
 <? $AUTH='consumption';
 	require_once 'app/init.php';
 
-	$row = given_record('consumption.id', array(
+	$row = given('consumption.id', array(
 		'consumed'=>array('',''=>null),
 		'product'=>array(0,''=>null),
 		'units'=>array(0,''=>null),
@@ -31,7 +31,7 @@
 			mistake('weight','No quantity defined.');
 
 		if (correct()) {
-			put($row,'consumption');
+			store('consumption.id',$row);
 			if (success()) return true;
 		}
 	} catch (Exception $x) {

@@ -5,7 +5,7 @@
 	$id = $_GET['id'];
 
 	if ($table!==null && $table!=='' && $id!==null && $id!=='') try {
-		$row = get($id,$table);
+		$row = fetch($table,$id);
 
 		$history = query('SELECT * FROM log_database'
 			.' WHERE `table`='.sql($table)
@@ -35,7 +35,7 @@
 			}
 	
 			$uid = $history[$i]['user_id'];
-			$u = ifnull($users[$uid], get($uid,'users'));
+			$u = ifnull($users[$uid], fetch('users.id',$uid));
 			$users[$uid] = $u;
 			$history[$i]['user'] = $u;
 			$history[$i]['actual'] = $actual_changes;

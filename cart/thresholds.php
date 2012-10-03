@@ -8,13 +8,13 @@
 			.' AND user IS NULL';
 	} else {
 		$group_cond = 'user='.sql($_SESSION['user_id']);
-		$user = get($_SESSION['user_id'],'users');
+		$user = fetch('users.id',$_SESSION['user_id']);
 	}
 
 	if (v('demographic_group')!==null) {
 		$demo = intval(v('demographic_group'));
 	} else {
-		$user = get($_SESSION['user_id'],'users');
+		$user = fetch('users.id',$_SESSION['user_id']);
 		$demo = $user['demographic_group'];
 	}
 
@@ -84,7 +84,7 @@
 <? begin_form($URL.'/cart/thresholds') ?>
 <? if (v('demographic_group')!==null) {
 	echo hidden('demographic_group',v('demographic_group'));
-	$dg = get($demo,'demographic_group');
+	$dg = fetch('demographic_group.id',$demo);
 	$ss = array();
 	if ($dg['gender']!==null) {
 		if (!$dg['gender']) {

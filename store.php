@@ -2,7 +2,7 @@
 	require_once 'app/init.php';
 	require_once 'lib/validation.php';
 
-	$row = given_record('store.id', array(
+	$row = given('store.id', array(
 		'owner'=>array('',''=>null),
 		'name'=>array('',''=>null),
 		'address'=>array('',''=>null),
@@ -41,7 +41,7 @@
 			validate_telephone($row['fax'],'fax',$COUNTRY_CODE);
 	
 		if (correct()) {
-			put($row,'store');
+			store('store.id',$row);
 			if (success($URL.'/stores')) return true;
 		}
 	} catch (Exception $x) {

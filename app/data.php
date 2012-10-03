@@ -313,14 +313,14 @@ function product_fooddb_import($prodid,$fdbid) {
 		}
 	}
 
-	update('product','id',$product);
+	update('product.id',$product);
 }
 
 function product_clearlink($prodid,$source) {
 	foreach (query('SELECT * FROM product_nutrient'
 	               .' WHERE product='.sql($prodid)
 	               .' AND source='.sql($source)) as $pn) {
-		$nut = get($pn['nutrient'],'nutrient');
+		$nut = fetch($pn['nutrient'],'nutrient');
 		if ($nut['basetable']) {
 			put(array(
 				'id'=>$prodid,
@@ -381,7 +381,7 @@ function product_parent_link($prodid,$parentid) {
 }
 
 function product_nutrient_link($prodid,$nut,$linkid,$multiplier=null) {
-	if (!is_array($nut)) $nut = get($nut,'nutrient');
+	if (!is_array($nut)) $nut = fetch('nutrient.id',$nut);
 	if ($multiplier===null)
 		$multiplier=product_nutrient_link_multiplier($prodid,$linkid);
 
@@ -490,7 +490,7 @@ function product_equivalents_for_stats($prod_id,&$equivs) {
 }
 
 function product_calc_typicals($prod) {
-	if (!is_array($prod)) $prod = get($prod,'product');
+	if (!is_array($prod)) $prod = fetch('product.id',$prod);
 
 	if ($prod['price_no_children'] || $prod['barcode']!==null) {
 		$where = ' WHERE product='.sql($prod['id']);
@@ -774,11 +774,11 @@ function product_calc_typicals($prod) {
 			/ $per_unit['price_count'];
 	}
 
-	update('product','id',$row);
+	update('product.id',$row);
 }
 
 function find_demographic_group($user) {
-	if (!is_array($user)) $user = get($user,'users');
+	if (!is_array($user)) $user = fetch('users.id',$user);
 
 	$conds = array();
 
@@ -813,7 +813,7 @@ function find_demographic_group($user) {
 }
 
 function user_update_thresholds($user) {
-	if (!is_array($user)) $user = get($user,'users');
+	if (!is_array($user)) $user = fetch('users.id',$user);
 
 	if ($user['demographic_group']===null) {
 		$demo = find_demographic_group($user);
@@ -842,7 +842,7 @@ function user_update_thresholds($user) {
 			if ($def_thr!==null) {
 				unset($def_thr['id']);
 				$def_thr['user'] = $user['id'];
-				put($def_thr,'threshold');
+				store('threshold.id',$def_thr);
 			}
 
 		} else if ($thr['demographic_group']!==null) {
@@ -855,7 +855,7 @@ function user_update_thresholds($user) {
 			if ($def_thr!==null) {
 				$def_thr['id'] = $thr['id'];
 				$def_thr['user'] = $user['id'];
-				put($def_thr,'threshold');
+				store('threshold.id',$def_thr);
 			} else {
 				put(array('id'=>-$thr['id']),'threshold');
 			}

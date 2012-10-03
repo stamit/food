@@ -1,7 +1,7 @@
 <?
-require_once dirname(__FILE__).'/util.php';
-require_once dirname(__FILE__).'/adodb5/adodb.inc.php';
-require_once dirname(__FILE__).'/adodb5/adodb-exceptions.inc.php';
+require_once 'lib/util.php';
+require_once 'lib/adodb5/adodb.inc.php';
+require_once 'lib/adodb5/adodb-exceptions.inc.php';
 
 # function query($sql, $limit=null, $offset=null, $db=null)
 # function value0($sql, $db=null)
@@ -16,15 +16,14 @@ require_once dirname(__FILE__).'/adodb5/adodb-exceptions.inc.php';
 
 # function execute($sql, $db=null)
 # function insert($table, $row, $db=null)
-# function update($table, $id_field, $row, $db=null)
-# function delete($table, $id_field, $row_or_id, $db=null)
+# function update($tablekey, $row, $db=null)
+# function delete($tablekey, $row, $db=null)
 
 # function commit($db=null)
 # function rollback($db=null)
 
-# function place_record(&$row, $id_field, $table, $db=null)
-# function get($id,$table)
-# function put($row, $table, $db=null)
+# function fetch($tablekeys,$row, $db=null)
+# function store($tablekeys,$row, $db=null)
 
 $MYSQL_ENCODING_MAPPING = array(
 	'UTF8'=>'utf8',
@@ -338,6 +337,28 @@ function get_fields($table, $db=null) {
 
 ################################################################################
 
+function sql_where_conditions($names,$values,$db,$from=0) {
+	$conditions = array();
+	if (is_array($values)) {
+		for ($i = $from ; $i < count($names) ; ++$i) {
+			$name = $names[$i];
+			if ($i===0) {
+				$table = $name;
+			} else {
+				$conditions[] = sqlid($name).'='.sql($values[$name],$db);
+			}
+		}
+	} else {
+		if (count($names)!=2)
+			throw new Exception('not enough values given');
+
+		$conditions[] = sqlid($names[1]).'='.sql($values,$db);
+	}
+	if (!$conditions)
+		throw new Exception('no keys specified in update('.repr($tablekeys).','.repr($values).')');
+	return implode(' AND ',$conditions);
+}
+
 
 function execute($sql, $db=null) {
 	global $DB; if ($db === null) $db = $DB;
@@ -374,19 +395,22 @@ function insert($table, $row, $db=null) {
 # $row must contain a field named $id_field, and only the fields that are to be modified
 # - $id_field is unquoted SQL identifier
 # - $row is indexed by unquoted SQL identifiers
-function update($table, $id_field, $row, $db=null) {
+function update($tablekeys, $row, $db=null) {
 	global $DB; if ($db === null) $db = $DB;
+
+	$words = explode('.',$tablekeys);
+	$table = $words[0];
+	if ($table === null) throw new Exception('no table specified');
 
 	$assignments = array();
 	foreach ($row as $field=>$value) if ($field!=$id_field) {
 		$assignments[] = sqlid($field).'='.sql($value,$db);
 	}
-
 	if (!$assignments) return 0;
 
 	$sql = 'UPDATE '.sqlid($table)
 	       .' SET '.implode(',',$assignments)
-	       .' WHERE '.sqlid($id_field).'='.sql($row[$id_field],$db);
+	       .' WHERE '.sql_where_conditions($words,$row,$db,1);
 
 	return execute($sql,$db);
 }
@@ -395,11 +419,15 @@ function update($table, $id_field, $row, $db=null) {
 # - $id_field is unquoted SQL identifier
 # - if $row_or_id is an array, is is indexed by unquoted SQL identifiers
 # - if $row_or_id is not an array, it is the row's ID
-function delete($table, $id_field, $row_or_id, $db=null) {
+function delete($tablekeys, $row, $db=null) {
 	global $DB; if ($db === null) $db = $DB;
 
-	$key = is_array($row_or_id) ? $row_or_id[$id_field] : $row_or_id;
-	$sql = 'DELETE FROM '.sqlid($table).' WHERE '.sqlid($id_field).'='.sql($key);
+	$words = explode('.',$tablekeys);
+	$table = $words[0];
+	if ($table === null) throw new Exception('no table specified');
+
+	$sql = 'DELETE FROM '.sqlid($table)
+	       .' WHERE '.sql_where_conditions($words,$row,$db,1);
 
 	return execute($sql,$db);
 }
@@ -428,7 +456,7 @@ function rollback($db=null) {
 
 #
 # return a record which is created from user-supplied data, and is prepared for
-# INSERTing, UPDATEing or DELETEing with place_record()
+# INSERTing, UPDATEing or DELETEing with store()
 #
 # - suppose postdata is "a=123" ( no 'key' field, meaning INSERT )
 #     (array('a'=>1.23, 'b'=>'foo'),'key')
@@ -442,7 +470,7 @@ function rollback($db=null) {
 #     (array('a'=>1.23, 'b'=>'foo'),'key')
 #         => array('key'=>-9999)
 #
-function given_record($a, $b, $ins_defaults=false) {
+function given($a, $b, $ins_defaults=false) {
 	if (is_array($a)) {
 		$prototype = $a;
 		$a = $b;
@@ -570,46 +598,50 @@ function given_field($field_name,$table_name) {
 	$value = null;
 	if ($table_name!==null) $value = post($table_name.'.'.$field_name);
 	if ($value === null) $value = post($field_name);
-	if ($value === null && $table_name!==null) $value = post($table_name.'_'.$field_name);  # XXX XXX XXX
+	if ($value === null && $table_name!==null) $value = post($table_name.'_'.$field_name);  # FIXME ?
 	return $value;
 }
 
-# works with the result of `given_record', after validation and possible
-# corrections by you
-function place_record(&$row, $id_field, $table, $db=null) {
+# fetches a row
+function fetch($tablekey,$id,$db=null) {
 	global $DB; if ($db === null) $db = $DB;
 
-	if ( ! $row[$id_field] ) {
-		$id = insert($table, $row, $db);
-	} else if ( $row[$id_field] > 0) {
-		update($table, $id_field, $row, $db);
-		$id = $row[$id_field];
-	} else {
-		$row[$id_field] = -$row[$id_field];
-		delete($table, $id_field, $row[$id_field], $db);
-		$id = $row[$id_field];
-	}
-
-	return $id;
-}
-
-
-# fetches a row by id
-function get($id,$table,$db=null) {
-	global $DB; if ($db === null) $db = $DB;
+	$words = explode('.',$tablekey);
+	$table = $words[0];
 
 	return ($id !== null)
-		? row0('SELECT * FROM '.sqlid($table).' WHERE id='.sql($id))
+		? row0('SELECT * FROM '.sqlid($table)
+		       .' WHERE '.sql_where_conditions($words,$id,$db,1))
 		: null
 	;
 }
 
-# like place_record, but also logs record into "log_database"
-# - $id_field is always 'id'
-function put($row, $table, $db=null) {
+# works with the result of `input', after validation and possible corrections
+# by you
+function store($tablekeys, $row, $db=null) {
+	global $DB; if ($db === null) $db = $DB;
 	global $REQUEST_ID;
 
-	$id = place_record($row,'id',$table,$db);
+	$words = explode('.',$tablekeys);
+	$table = $words[0];
+
+	if ( count($words)==1 ) {
+		$id = insert($table, $row, $db);
+
+	} else if ( count($words)==2 ) {
+		$key = $words[1];
+		if ( ! $row[$key] ) {
+			$id = insert($table, $row, $db);
+		} else if ( $row[$key] > 0) {
+			$id = $row[$key];
+			update($table.'.'.$key, $row, $db);
+		} else {
+			$id = -$row[$key];
+			delete($table.'.'.$key, $id, $db);
+		}
+	} else {
+		throw new Exception('not implemented');
+	}
 
 	insert('log_database',array(
 		'request_id'=>$REQUEST_ID,

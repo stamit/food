@@ -2,7 +2,7 @@
 	require_once 'app/init.php';
 
 	$id = intval($_GET['id']);
-	$user = get($id,'users');
+	$user = fetch('users.id',$id);
 	if ($user===null) redirect($URL);
 
 	if ( $user['confirmation']!==null

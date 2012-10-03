@@ -1,7 +1,7 @@
 <? $AUTH=true;
 	require_once 'app/init.php';
 
-	$row = given_record('store.id', array(
+	$row = given('store.id', array(
 		'birth'=>array('',''=>null),
 		'gender'=>array(0,''=>null),
 		'pregnancy'=>array(0,''=>null),
@@ -35,7 +35,7 @@
 		}
 
 		if (correct()) {
-			put($row,'users');
+			store('users.id',$row);
 			user_update_thresholds($row['id']);
 			if (success($URL.'/')) return true;
 		}
@@ -43,7 +43,7 @@
 		if (failure($x)) return false;
 	}
 
-	$row = array_merge(get($_SESSION['user_id'],'users'),$row);
+	$row = array_merge(fetch('users.id',$_SESSION['user_id']),$row);
 
 	$HEADING='Your personal information';
 ?>

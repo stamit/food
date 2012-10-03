@@ -1,7 +1,7 @@
 <? $AUTH=true;
 	require_once 'app/init.php';
 
-	$user = get($_SESSION['user_id'],'users');
+	$user = fetch('users.id',$_SESSION['user_id']);
 	$need_demos = ($user['birth']===null) ||
 	              ($user['gender']===null) ||
 	              ($user['pregnancy']===null);

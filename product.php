@@ -32,9 +32,8 @@
 	);
 	foreach (col('SELECT name FROM nutrient WHERE basetable') as $name)
 		$proto[$name] = array(0.0,''=>null);
-	$row = given_record('product.id', $proto);
-
-	$old = get($row['id'],'product');
+	$row = given('product.id', $proto);
+	$old = fetch('product.id',$row['id']);
 
 	if ($row['id']!==null) {
 		$disabled = !($old['user_id']===null ||
@@ -174,7 +173,7 @@
 		}
 
 		if (correct()) {
-			$row['id'] = put($row,'product');
+			$row['id'] = store('product.id',$row);
 
 			foreach (query('SELECT * FROM nutrient') as $nut)
 			if (array_key_exists($nut['name'],$_POST)) {

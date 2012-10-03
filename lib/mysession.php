@@ -49,7 +49,7 @@ function mysession_save() {
 	if ($_SESSION['user_id']!==null) {
 		$SESSION_ROW['user_id'] = $_SESSION['user_id'];
 	}
-	update('log_sessions','id',$SESSION_ROW);
+	update('log_sessions.id',$SESSION_ROW);
 }
 
 ?>

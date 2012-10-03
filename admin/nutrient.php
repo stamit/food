@@ -3,7 +3,7 @@
 	require_once 'app/init.php';
 	require_once 'lib/validation.php';
 
-	$row = given_record('nutrient.id', array(
+	$row = given('nutrient.id', array(
 		'order'=>0,
 		'column'=>0,
 		'tag'=>'',
@@ -17,7 +17,7 @@
 		$row['basetable'] = 0;
 
 		if (correct()) {
-			put($row,'nutrient');
+			store('nutrient.id',$row);
 			if (success($URL.'/nutrient')) return true;
 		}
 	} catch (Exception $x) {

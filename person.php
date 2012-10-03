@@ -2,7 +2,7 @@
 	require_once 'app/init.php';
 	require_once 'lib/validation.php';
 
-	$row = given_record('person.id', array(
+	$row = given('person.id', array(
 		'user_id'=>array(0,''=>null),
 		'name'=>array('',''=>null),
 		'address'=>array('',''=>null),
@@ -71,7 +71,7 @@
 		}
 
 		if (correct()) {
-			put($row,'person');
+			store('person.id',$row);
 			if (success($URL.'/persons')) return true;
 		}
 	} catch (Exception $x) {

@@ -1,7 +1,7 @@
 <? $AUTH=true;
 	require_once 'app/init.php';
 
-	if ($cart===null) $cart = get(v('id'),'cart');
+	if ($cart===null) $cart = fetch('cart.id',v('id'));
 	authif($_POST['_OP_']=='create' || $cart['user_id']==$_SESSION['user_id']);
 
 	if (posting()) {

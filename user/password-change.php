@@ -2,7 +2,7 @@
 	require_once 'app/init.php';
 	require_once 'lib/email.php';
 
-	$user = get($_SESSION['user_id'],'users');
+	$user = fetch('users.id',$_SESSION['user_id']);
 
 	if (posting()) try {
 		if ($user===null) {

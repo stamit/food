@@ -1,7 +1,7 @@
 <? $AUTH=true;
 	require_once 'app/init.php';
 
-	$row = given_record('receipt.id', array(
+	$row = given('receipt.id', array(
 		'parent'=>array(0,''=>null),
 		'issued'=>array('',''=>null),
 		'store'=>array(0,''=>null),
@@ -85,7 +85,7 @@
 		}
 
 		if (correct()) {
-			$id = put($row,'receipt');
+			$id = store('receipt.id',$row);
 			if ($row['id']==null) {
 				if ($row['parent']!==null) {
 					if (success($URL.'/receipt?id='

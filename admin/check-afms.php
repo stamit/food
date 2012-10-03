@@ -8,7 +8,7 @@ foreach (query('SELECT * FROM person') as $person) {
 	if ($person['afm']!==null) {
 		$mistake = check_afm($person['afm']);
 		if ( $mistake !== null ) {
-			$user = get($person['user_id'],'users');
+			$user = fetch('users.id',$person['user_id']);
 			echo 'http://efood.stamit.gr/person?id='.$person['id']
 				.' : '
 				.' by user '.$user['username'].','

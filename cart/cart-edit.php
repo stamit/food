@@ -2,13 +2,13 @@
 
 require_once 'app/init.php';
 
-$row = given_record('cart_item.id', array(
+$row = given('cart_item.id', array(
 	'quantity'=>0.0,
 	#'unit'=>0,
 ));
 
-$ci = get($row['id'],'cart_item');
-$cart = get($ci['cart'],'cart');
+$ci = fetch('cart_item.id',$row['id']);
+$cart = fetch('cart.id',$ci['cart']);
 authif($cart['user_id']==$_SESSION['user_id']);
 
 if (posting()) try {
@@ -22,7 +22,7 @@ if (posting()) try {
 	#	mistake('cart_item.unit','Unit must be 0, 1 or 2.');
 
 	if (correct()) {
-		$prod = get($ci['product'],'product');
+		$prod = fetch('product.id',$ci['product']);
 
 		$row['unit'] = $ci['unit'];
 		switch ($row['unit']) {
@@ -70,7 +70,7 @@ if (posting()) try {
 			break;
 		}
 
-		update('cart_item','id',$row);
+		update('cart_item.id',$row);
 		if (success()) return true;
 	}
 } catch (Exception $x) {

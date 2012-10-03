@@ -2,9 +2,9 @@
 	require_once 'app/init.php';
 	require_once 'lib/maketable/fun.php';
 
-	if ($cart===null) $cart = get(
-		maketable_param('id',$cart['id']),
-		'cart'
+	if ($cart===null) $cart = fetch(
+		'cart.id',
+		maketable_param('id',$cart['id'])
 	);
 	authif($cart['user_id']==$_SESSION['user_id']);
 

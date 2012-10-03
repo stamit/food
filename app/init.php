@@ -7,9 +7,17 @@ require_once 'app/settings.php';
 require_once 'app/data.php';
 require_once 'app/emailtpl.php';
 
-function my_error_handler($err_no, $err_str, $err_file, $err_line) {
+function my_error_handler($errno, $err_str, $err_file, $err_line) {
+	global $PRODUCTION_SERVER;
+
+	if (!(error_reporting()&$errno))
+		return;
+
+	if (!$PRODUCTION_SERVER)
+		echo "<pre>\n".html($errno.$err_file.':'.$err_line.': '.$err_str)."\n</pre>";
+
 	error_log($err_file.':'.$err_line.': '.$err_str);
-	switch ($err_no) {
+	switch ($errno) {
 	case E_WARNING: case E_USER_WARNING:
 	case E_NOTICE: case E_USER_NOTICE:
 	case 2048: // E_STRICT in PHP5
@@ -28,7 +36,12 @@ function my_error_handler($err_no, $err_str, $err_file, $err_line) {
 
 function my_exception_handler($exception) {
 	global $URL;
-	error_log($exception->__toString());
+
+	error_log('EXCEPTION: '.$exception->getMessage());
+	$lines = explode("\n",$exception->getTraceAsString());
+	for ($i = 0 ; $i < count($lines) ; ++$i)
+		error_log('TRACE: '.$lines[$i]);
+
 	if (headers_sent()) {
 		print '<script type="text/javascript">window.location.href='.sql($URL.'/trouble').';</script>';
 		include 'app/after.php';
@@ -43,11 +56,9 @@ function my_exception_handler($exception) {
 if ($URL===null) $URL='';
 $DIR=dirname(dirname(__FILE__));
 
-if ($PRODUCTION_SERVER) {
-	set_error_handler('my_error_handler');
-	set_exception_handler('my_exception_handler');
-	error_reporting(0);
-}
+set_error_handler('my_error_handler');
+set_exception_handler('my_exception_handler');
+error_reporting(E_ERROR);
 
 if ($CONTENT_TYPE === null) $CONTENT_TYPE = 'text/html';
 if ($DEFAULT_ENCODING === null) $DEFAULT_ENCODING = 'UTF-8';

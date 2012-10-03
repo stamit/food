@@ -2,7 +2,7 @@
 	require_once 'app/init.php';
 	require_once 'lib/validation.php';
 
-	$row = given_record('users.id', array(
+	$row = given('users.id', array(
 		'username'=>array('',''=>null),
 		'password'=>array('',''=>null),
 		'email'=>array('',''=>null),
@@ -47,7 +47,7 @@
 		}
 
 		if (correct()) {
-			put($row,'users');
+			store('users.id',$row);
 			if (success($URL.'/admin/users')) return true;
 		}
 	} catch (Exception $x) {
