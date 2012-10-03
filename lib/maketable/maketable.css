@@ -24,9 +24,10 @@
 	width:16px;
 	height:16px;
 	border:none;
-	background: transparent url(find.gif) no-repeat top left;
+	background: transparent url("find.png") no-repeat top left;
 	cursor:pointer;
 	padding:0;
+	float:right;
 }
 .findbutton:hover { background-position: top right; }
 .findbutton:active { background-position: bottom left; }
@@ -39,9 +40,10 @@
 	width:16px;
 	height:16px;
 	border:none;
-	background: transparent url(nofind.gif) no-repeat top left;
+	background: transparent url("nofind.png") no-repeat top left;
 	cursor:pointer;
 	padding:0;
+	float:right;
 }
 .nofindbutton:hover { background-position: top right; }
 .nofindbutton:active { background-position: bottom left; }
@@ -114,7 +116,7 @@
 	width:16px;
 	height:16px;
 	border:none;
-	background:transparent url(edit.gif) no-repeat top left;
+	background:transparent url(edit.png) no-repeat top left;
 	cursor:pointer;
 	padding:0;
 }
@@ -129,7 +131,7 @@
 	width:16px;
 	height:16px;
 	border:none;
-	background:transparent url(tick.png) no-repeat top left;
+	background:transparent url(ok.png) no-repeat top left;
 	cursor:pointer;
 	padding:0;
 }
@@ -144,7 +146,7 @@
 	width:16px;
 	height:16px;
 	border:none;
-	background:transparent url(cross.png) no-repeat top left;
+	background:transparent url(cancel.png) no-repeat top left;
 	cursor:pointer;
 	padding:0;
 }
