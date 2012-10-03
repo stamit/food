@@ -2,7 +2,7 @@
 	require_once 'app/init.php';
 	require_once 'lib/validation.php';
 
-	$row = given_record(array(
+	$row = given_record('store.id', array(
 		'owner'=>array('',''=>null),
 		'name'=>array('',''=>null),
 		'address'=>array('',''=>null),
@@ -11,7 +11,7 @@
 		'phone2'=>array('',''=>null),
 		'fax'=>array('',''=>null),
 		'notes'=>array('',''=>null),
-	),'id','store');
+	));
 
 	if (posting()) try {
 		if (!has_right('register-stores'))

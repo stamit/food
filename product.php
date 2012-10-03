@@ -32,7 +32,7 @@
 	);
 	foreach (col('SELECT name FROM nutrient WHERE basetable') as $name)
 		$proto[$name] = array(0.0,''=>null);
-	$row = given_record($proto,'id','product');
+	$row = given_record('product.id', $proto);
 
 	$old = get($row['id'],'product');
 

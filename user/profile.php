@@ -1,11 +1,11 @@
 <? $AUTH=true;
 	require_once 'app/init.php';
 
-	$row = given_record(array(
+	$row = given_record('store.id', array(
 		'birth'=>array('',''=>null),
 		'gender'=>array(0,''=>null),
 		'pregnancy'=>array(0,''=>null),
-	),'id','store');
+	));
 
 	if (posting()) try {
 		$row['id'] = $_SESSION['user_id'];

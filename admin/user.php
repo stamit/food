@@ -2,7 +2,7 @@
 	require_once 'app/init.php';
 	require_once 'lib/validation.php';
 
-	$row = given_record(array(
+	$row = given_record('users.id', array(
 		'username'=>array('',''=>null),
 		'password'=>array('',''=>null),
 		'email'=>array('',''=>null),
@@ -15,7 +15,7 @@
 		'gender'=>array(0),
 		'pregnancy'=>array(0),
 		//'demographic_group'=>array(0,''=>null),
-	),'id','users');
+	));
 
 	if (posting()) try {
 		if ($row['id']===null || $row['id']>0) {

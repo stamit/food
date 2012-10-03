@@ -2,7 +2,7 @@
 	require_once 'app/init.php';
 	require_once 'lib/validation.php';
 
-	$row = given_record(array(
+	$row = given_record('person.id', array(
 		'user_id'=>array(0,''=>null),
 		'name'=>array('',''=>null),
 		'address'=>array('',''=>null),
@@ -16,7 +16,7 @@
 		'afm'=>array('',''=>null),
 		'doy'=>array('',''=>null),
 		'notes'=>array('',''=>null),
-	),'id','person');
+	));
 
 	if ($row['id']!==null) {
 		$uid = value('SELECT user_id FROM person'

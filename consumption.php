@@ -1,13 +1,13 @@
 <? $AUTH='consumption';
 	require_once 'app/init.php';
 
-	$row = given_record(array(
+	$row = given_record('consumption.id', array(
 		'consumed'=>array('',''=>null),
 		'product'=>array(0,''=>null),
 		'units'=>array(0,''=>null),
 		'weight'=>array(0.0,''=>null),
 		'volume'=>array(0.0,''=>null),
-	),'id','consumption');
+	));
 
 	if ($row['id']!==null) {
 		$uid = value('SELECT user_id FROM consumption'

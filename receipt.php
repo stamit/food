@@ -1,7 +1,7 @@
 <? $AUTH=true;
 	require_once 'app/init.php';
 
-	$row = given_record(array(
+	$row = given_record('receipt.id', array(
 		'parent'=>array(0,''=>null),
 		'issued'=>array('',''=>null),
 		'store'=>array(0,''=>null),
@@ -15,7 +15,7 @@
 		'net_volume'=>array(0.0,''=>null),
 		'amount'=>array(0.0,''=>null),
 		'notes'=>array('',''=>null),
-	),'id','receipt');
+	));
 
 	if ($row['id']!==null) {
 		$uid = value('SELECT user_id FROM receipt'

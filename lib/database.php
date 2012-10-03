@@ -427,26 +427,8 @@ function rollback($db=null) {
 
 
 #
-# return a record which is created from POSTed data, and is prepared for
+# return a record which is created from user-supplied data, and is prepared for
 # INSERTing, UPDATEing or DELETEing with place_record()
-#
-# - $prototype is an example record with default values for all fields *in the
-#   correct types*; no other fields except $id_field are in the result
-#
-# - the value of the field named $id_field (the key) must be an integer
-#
-# - if the key is == 0 or missing, then the record returned is for INSERTing
-#   (optionally has all fields in $prototype, with default values; $id_field is
-#   not added)
-#
-# - if the key is > 0, then the record returned is for UPDATEing (has only the
-#   $id_field and the POSTed fields)
-#
-# - if the key is < 0, then the record returned is for DELETEing (has only the
-#   $id_field, which must be negated)
-#
-# - if $table_name is given, then "$table_name.FIELDNAME" (if present) is used
-#   in preference to "FIELDNAME" for each field
 #
 # - suppose postdata is "a=123" ( no 'key' field, meaning INSERT )
 #     (array('a'=>1.23, 'b'=>'foo'),'key')
@@ -460,7 +442,28 @@ function rollback($db=null) {
 #     (array('a'=>1.23, 'b'=>'foo'),'key')
 #         => array('key'=>-9999)
 #
-function given_record($prototype, $id_field=null, $table_name=null, $ins_defaults=false) {
+function given_record($a, $b, $ins_defaults=false) {
+	if (is_array($a)) {
+		$prototype = $a;
+		$a = $b;
+	} else {
+		$prototype = $b;
+	}
+
+	if (is_string($a)) {
+		$i = strpos($a,'.');
+		if ($i===false) {
+			$table_name=$a;
+			$id_field=null;
+		} else {
+			$table_name=substr($a,0,$i);
+			$id_field=substr($a,$i+1);
+		}
+	} else {
+		$table_name=null;
+		$id_field=null;
+	}
+
 	$record = array();
 	if ($id_field !== null) {
 		$id = given_field($id_field,$table_name);

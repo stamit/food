@@ -2,10 +2,10 @@
 
 require_once 'app/init.php';
 
-$row = given_record(array(
+$row = given_record('cart_item.id', array(
 	'quantity'=>0.0,
 	#'unit'=>0,
-),'id','cart_item');
+));
 
 $ci = get($row['id'],'cart_item');
 $cart = get($ci['cart'],'cart');

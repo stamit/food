@@ -3,7 +3,7 @@
 	require_once 'app/init.php';
 	require_once 'lib/validation.php';
 
-	$row = given_record(array(
+	$row = given_record('nutrient.id', array(
 		'order'=>0,
 		'column'=>0,
 		'tag'=>'',
@@ -11,7 +11,7 @@
 		'description'=>'',
 		'unit'=>'',
 		'decimals'=>0,
-	),'id','nutrient');
+	));
 
 	if (posting()) try {
 		$row['basetable'] = 0;
