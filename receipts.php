@@ -9,10 +9,10 @@
 
 <? $mtid = include 'receipts-table.php' ?>
 
-<h3>New receipt</h3>
+<h3 class="noprint">New receipt</h3>
 
 <? begin_form('receipt') ?>
-<table>
+<table class="fields noprint">
 	<tr><th class="left">Date/time:</th><td><?
 		print datetime_input('issued',today())
 	?></td></tr>

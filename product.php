@@ -272,14 +272,14 @@
 <? begin_form($URL.'/product'.($row['id']?'?id='.$row['id']:'')) ?>
 <?=hidden('id',$row['id'])?>
 
-<table>
+<table class="layout">
 	<tr><td>
 
-		<table>
-			<tr><th class="left">Barcode:</th><td><?
-				print input('barcode',$row,13,$disabled);
+		<table class="fields">
+			<tr><th>Barcode:</th><td>
+				<?=input('barcode',$row,13,$disabled)?>
 
-				if ($row['id']) {
+				<? if ($row['id']) {
 					$np=value('SELECT COUNT(*) FROM receipt'
 					          .' WHERE product='
 					          .sql($row['id'])
@@ -288,12 +288,13 @@
 					if ($np>0) {
 						echo ' <a href="'.html('purchases?prodid='.$row['id']).'">'.($np==1?$np.' purchase':$np.' purchases').'</a>';
 					}
-				}
-			?></td></tr>
+				} ?>
+			</td></tr>
 
-			<tr><th class="left">Name:</th><td><?
-				print input('name',$row,array(40,64),$disabled);
-				if ($row['type']!==null) {
+			<tr><th>Name:</th><td>
+				<?=input('name',$row,array(40,64),$disabled)?>
+
+				<? if ($row['type']!==null) {
 					print hidden('type',$row);
 				} else {
 					print ' ';
@@ -305,52 +306,54 @@
 				}
 				if ($row['id']) {?>
 					<a href="<?=html('?parent='.$row['id'])?>">New variation</a>
-				<?}
-			?></td></tr>
+				<?}?>
+			</td></tr>
 
-			<tr><th class="left">Manufacturer:</th><td><?
-				print dropdown('maker',$row,
-					query('SELECT id AS value, name AS text'
-					      .' FROM person ORDER BY name'),
-				$disabled, array('','(anyone or unknown)'));
-				if ($row['maker']) {
+			<tr><th>Manufacturer:</th><td>
+				<?=dropdown('maker',$row,
+				            query('SELECT id AS value, name AS text'
+				                  .' FROM person ORDER BY name'),
+				            $disabled, array('','(anyone or unknown)'))?>
+
+				<? if ($row['maker']) {
 					print ' <a href="'.html('person?id='.urlencode($row['maker'])).'"><img src="app/link.png" alt="go" class="icon"></a>';
-				}
-			?></td></tr>
+				} ?>
+			</td></tr>
 
-			<tr><th class="left">Packager:</th><td><?
-				print dropdown('packager',$row,
-					query('SELECT id AS value, name AS text'
-					      .' FROM person ORDER BY name'),
-				$disabled, array('','(anyone or unknown)'));
-				if ($row['packager']) {
+			<tr><th>Packager:</th><td>
+				<?=dropdown('packager',$row,
+				            query('SELECT id AS value, name AS text'
+				                  .' FROM person ORDER BY name'),
+				            $disabled, array('','(anyone or unknown)'))?>
+
+				<? if ($row['packager']) {
 					print ' <a href="'.html('person?id='.urlencode($row['packager'])).'"><img src="app/link.png" alt="go" class="icon"></a>';
-				}
-			?></td></tr>
+				} ?>
+			</td></tr>
 
-			<tr><th class="left">Importer:</th><td><?
-				print dropdown('importer',$row,
-					query('SELECT id AS value, name AS text'
-					      .' FROM person ORDER BY name'),
-				$disabled, array('',
-					'(anyone or unknown or local product)'
-				));
-				if ($row['importer']) {
+			<tr><th>Importer:</th><td>
+				<?=dropdown('importer',$row,
+				            query('SELECT id AS value, name AS text'
+				                  .' FROM person ORDER BY name'),
+				            $disabled,
+				            array('', '(anyone or unknown or local product)'))?>
+				
+				<? if ($row['importer']) {
 					print ' <a href="'.html('person?id='.urlencode($row['importer'])).'"><img src="app/link.png" alt="go" class="icon"></a>';
-				}
-			?></td></tr>
+				} ?>
+			</td></tr>
 
-			<tr><th class="left">Distributor:</th><td><?
-				print dropdown('distributor',$row,
-					query('SELECT id AS value, name AS text'
-					      .' FROM person ORDER BY name'),
-				$disabled, array('','(anyone or unknown)'));
-				if ($row['distributor']) {
+			<tr><th>Distributor:</th><td>
+				<?=dropdown('distributor',$row,
+				            query('SELECT id AS value, name AS text'
+				                  .' FROM person ORDER BY name'),
+				            $disabled, array('','(anyone or unknown)'))?>
+				<? if ($row['distributor']) {
 					print ' <a href="'.html('person?id='.urlencode($row['distributor'])).'"><img src="app/link.png" alt="go" class="icon"></a>';
-				}
-			?></td></tr>
+				} ?>
+			</td></tr>
 
-			<tr><th class="left">Typical price:</th><td>
+			<tr><th>Typical price:</th><td>
 				<?=number_input('typical_price',$row,null,
 				                $disabled).'€'?>
 				&nbsp;
@@ -374,9 +377,10 @@
 				>Recalculate</button>
 			</td></tr>
 
-			<tr><th class="left">Units:</th><td>
+			<tr><th>Units:</th><td>
 				<?=number_input('typical_units',$row,null,
 				                $disabled)?>
+
 				<? if ($row['type']!=3 || $row['type']===null) { ?>
 					units, packages, rations or pairs
 				<? } else { ?>
@@ -391,11 +395,12 @@
 				<? } ?>
 			</td></tr>
 
-			<tr><th class="left"><?
-				if ($row['type']!=3 || $row['type']===null)
+			<tr><th><?
+				if ($row['type']!=3 || $row['type']===null) {
 					echo 'Net weight:';
-				else
+				} else {
 					echo 'Weight:';
+				}
 			?></th><td><?
 				if ($row['type']!=3 || $row['type']===null) {
 					echo '℮ ';
@@ -415,52 +420,49 @@
 			?></td></tr>
 
 			<? if ($row['type']!=3 || $row['type']===null) { ?>
-			<tr><th class="left">Net.volume:</th><td><?
+			<tr><th>Net.volume:</th><td><?
 				print '℮ '.number_input('net_volume',$row,null,
 				                        $disabled).'ml';
 			?></td></tr>
 
-			<tr><th class="left">Storage:</th><td><?
-				print number_input('store_duration_months',
-				                   $row,2,$disabled).' months and ';
-				print number_input('store_duration',$row,2,
-				                   $disabled).' days';
-				print ', temperature';
-				print number_input('store_temp_min',$row,3,
-				                   $disabled).'-';
-				print number_input('store_temp_max',$row,3,
-				                   $disabled).'°C';
-				print ', in ';
-				print dropdown('store_conditions',$row,query(
+			<tr><th>Storage:</th><td>
+				<?=number_input('store_duration_months',$row,2,$disabled)?> months
+				and
+				<?=number_input('store_duration',$row,2,$disabled)?> days,
+				at temperature
+				<?=number_input('store_temp_min',$row,3,$disabled)?>
+				-
+				<?=number_input('store_temp_max',$row,3,$disabled)?>°C,
+				in 
+				<?=dropdown('store_conditions',$row,query(
 					'SELECT id AS value,description AS text'
 					.' FROM storage_conditions'
-				),null,array('','(unknown)'));
-			?></td></tr>
+				),null,array('','(unknown)'))?>
+			</td></tr>
 			<? } ?>
 
 			<? if ($row['type']!=3 || $row['type']===null) { ?>
-			<tr><th class="left top">Ingredients:</th><td><?
-				print textarea('ingredients',$row,64,5,
-				               $disabled);
-			?></td></tr>
+			<tr><th>Ingredients:</th><td>
+				<?=textarea('ingredients',$row,64,5,$disabled)?>
+			</td></tr>
 			<? } else { ?>
-			<tr><th class="left top">Specifications:</th><td><?
-				print textarea('ingredients',$row,64,5,
-				               $disabled);
-			?></td></tr>
+			<tr><th>Specifications:</th><td>
+				<?=textarea('ingredients',$row,64,5, $disabled)?>
+			</td></tr>
 			<? } ?>
 
-			<tr><th class="left">Variation of:</th><td><?
-				print dropdown('parent',$row,
-					query('SELECT id AS value, name AS text FROM product'
-						.($row['id']?' WHERE id<>'.sql($row['id']):'')
-					.' ORDER BY name'),
-				$disabled, array('','(root product)'));
-				if ($row['parent']) {
+			<tr><th>Variation of:</th><td>
+				<?=dropdown('parent',$row,
+				            query('SELECT id AS value, name AS text FROM product'
+				                  .($row['id']?' WHERE id<>'.sql($row['id']):'')
+				                  .' ORDER BY name'),
+				            $disabled, array('','(root product)'))?>
+
+				<? if ($row['parent']) {
 					print ' <a href="'.html('product?id='.urlencode($row['parent'])).'"><img src="app/link.png" alt="go" class="icon"></a>';
-				}
-			?></td></tr>
-			<tr><td colspan="2"><?
+				} ?>
+			</td></tr>
+			<tr><th>Variations:</th><td><?
 				foreach (query('SELECT id,name FROM product WHERE parent='.sql($row['id'])) as $i=>$x) {
 					if ($i) print '<br />';
 					print '<a href="product?id='.html(urlencode($x['id'])).'">'

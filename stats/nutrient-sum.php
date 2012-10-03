@@ -61,7 +61,7 @@
 <?php include 'app/begin.php' ?>
 
 <form id="<?= html($ID) ?>" method="post" action="nutrient-sum">
-<table>
+<table class="fields">
 	<tr><th>Since:</th><td><?= datetime_input('since',$_POST) ?></td></tr>
 	<tr><th>Until:</th><td><?= datetime_input('until',$_POST) ?></td></tr>
 	<tr><td colspan="2" class="buttons"><button type="submit" class="button">Calculate</button></td></tr>

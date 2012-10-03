@@ -13,7 +13,7 @@
 <h3>New consumption</h3>
 
 <? push(); begin_form($URL.'/consumption') ?>
-<table>
+<table class="fields">
 	<tr><th class="left">Date/time:</th><td><?
 		print datetime_input('consumed',($row?$row['consumed']:today()))
 	?></td></tr>

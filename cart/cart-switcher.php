@@ -30,17 +30,21 @@
 	echo '<h2>Shopping basket ';
 	if ($_GET['_OP_']=='rename') {
 		echo hidden('id',$cart);
-		echo input('name',$cart);
+		echo '"'.input('name',$cart).'"';
+		echo '<span class="noprint">';
 		echo ' <button type="button" class="okbutton" onclick="'.html('return cart_rename_ok('.js($ID).')').'"></button>';
 		echo ' <button type="button" class="cancelbutton" onclick="'.html('return cart_rename_cancel('.js($ID).')').'"></button>';
+		echo '</span>';
 	} else {
-		echo dropdown('id',$cart,query(
+		echo '"'.dropdown('id',$cart,query(
 			'SELECT id AS value, name AS text FROM cart'
 			.' WHERE user_id='.sql($_SESSION['user_id'])
 			.' ORDER BY name'
-		),null,array(0,'(create new)'),'cart_change('.js($ID).')');
+		),null,array(0,'(create new)'),'cart_change('.js($ID).')').'"';
+		echo '<span class="noprint">';
 		echo ' <button type="button" class="editbutton" onclick="'.html('return cart_rename('.js($ID).')').'"></button>';
 		echo ' <button type="button" class="deletebutton" onclick="'.html('return cart_delete('.js($ID).')').'"></button>';
+		echo '</span>';
 	}
 	echo '</form>';
 	echo '</h2>';

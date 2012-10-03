@@ -59,7 +59,7 @@
 <? include 'app/begin.php' ?>
 
 <? begin_form() ?>
-<table>
+<table class="fields">
 	<tr><th class="left">Owner:</th><td><?
 		print dropdown('owner',$row,
 			query('SELECT id AS value, name AS text'

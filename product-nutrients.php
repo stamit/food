@@ -6,16 +6,18 @@
 ?>
 <h3>Nutritional information</h3>
 
-<table class="seplayout"><tr>
+<table class="layout"><tr>
 	<td>
-		<strong>Sample:</strong>
-		<?=number_input('sample_weight',$row,null,$disabled)?>g
-		<?=number_input('sample_volume',$row,null,$disabled)?>ml
-	</td>
-	<td>
-		<strong>Refuse:</strong>
-		<?=number_input('refuse_weight',$row,null,$disabled)?>g
-		<?=number_input('refuse_volume',$row,null,$disabled)?>ml
+		<table class="fields">
+			<tr><th>Sample:</th><td>
+				<?=number_input('sample_weight',$row,null,$disabled)?>g
+				<?=number_input('sample_volume',$row,null,$disabled)?>ml
+			</td></tr>
+			<tr><th>Refuse:</th><td>
+				<?=number_input('refuse_weight',$row,null,$disabled)?>g
+				<?=number_input('refuse_volume',$row,null,$disabled)?>ml
+			</td></tr>
+		</table>
 	</td>
 	<td>
 		<strong>FOODDB ID:</strong>
@@ -33,13 +35,13 @@
 	</td>
 </tr></table>
 
-<table class="nutrientcols"><tr>
+<table class="layout"><tr>
 <? foreach (array(1,2,3,4) as $col) { ?>
-<td class="nutrientcols<?=$col==4?' last':''?>">
-	<table>
+<td class="<?=$col==4?' last':''?>">
+	<table class="fields">
 	<? foreach (query('SELECT * FROM nutrient WHERE `column`='.$col
 	                  .' ORDER BY `order`') as $nut) { ?>
-		<tr><th class="left"><?=html($nut['description'])?>:</th><td><?
+		<tr><th><?=html($nut['description'])?>:</th><td><?
 			$pn = row0('SELECT * FROM product_nutrient'
 			           .' WHERE product='.sql($row['id'])
 			           .' AND nutrient='.sql($nut['id']));

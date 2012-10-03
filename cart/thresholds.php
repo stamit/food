@@ -110,7 +110,7 @@
 	}
 	echo html(capitalize(implode(', ',$ss)));
 } ?>
-<table>
+<table class="fields">
 <? foreach (query('SELECT * FROM nutrient ORDER BY `order`') as $nutrient) {
 	$threshold = row0('SELECT * FROM threshold'
 		.' WHERE '.$group_cond

@@ -7,5 +7,5 @@
 ?>
 <? include 'app/begin.php' ?>
 <? include 'foods-table.php' ?>
-<p><a href="product?type=1">New food</a></p>
+<p class="noprint"><a href="product?type=1">New food</a></p>
 <? return include 'app/end.php' ?>

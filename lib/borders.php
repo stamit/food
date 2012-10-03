@@ -27,7 +27,7 @@ function begin_borders_str($id, $img_pre, $img_ext, $cssborder='', $cssbg='', $x
 	$xs = html($xs);
 	if (strlen($xs)) $sxs = ' style="'.$xs.'"';
 
-	return '<table class="borders" cellpadding="0" cellspacing="0">'
+	return '<table class="layout" cellpadding="0" cellspacing="0">'
 		.'<tr class="layout">'
 			.'<td class="layout"'.$sxs.$xtra.'><img alt="" src="'.$img_pre.'-topleft'.$img_ext.'"/></td>'
 			.'<td class="layout" style="'
@@ -44,7 +44,7 @@ function begin_borders_str($id, $img_pre, $img_ext, $cssborder='', $cssbg='', $x
 					: 'background-image: url(\''.$img_pre.'-left'.$img_ext.'\'); background-repeat: repeat-y;'
 				)
 			.$xs.'"'.$xtra.'></td>'
-			.'<td '.($id?'id="'.html($id).'" ':'').'style="'
+			.'<td'.($id?' id="'.html($id).'"':'').' class="layout" style="'
 				.( strlen($cssbg)
 					? "background: $cssbg"
 					: 'background-image: url(\''.$img_pre.'-center'.$img_ext.'\');'
@@ -127,7 +127,7 @@ function begin_borders2_str($id, $img_pre,$img_ext, $w1,$w2,$h1,$h2, $cssbg, $xt
 	                     : "background-image:url('".$img_pre."-center".$img_ext."');" ;
 
 	if (detect_msie())
-		return '<table class="borders" cellpadding="0" cellspacing="0">'
+		return '<table class="layout" cellpadding="0" cellspacing="0">'
 			.'<tr class="layout">'
 				."<td class=\"layout\"$sxs$xtra><img alt=\"\" src=\"$img_pre-topleft$img_ext\"/></td>"
 				."<td class=\"layout\" style=\"width: {$w1}px;$xs\"$xtra><img alt=\"\" src=\"$img_pre-topleftr$img_ext\"/></td>"
@@ -148,9 +148,9 @@ function begin_borders2_str($id, $img_pre,$img_ext, $w1,$w2,$h1,$h2, $cssbg, $xt
 					.'<div style="width:1px;height:1px;"></div>'
 				."</td>"
 				.'<td class="layout" style="'.html($bg).$xs.'"'.$xtra.'></td>'
-				.'<td'.($id?' id="'.html($id).'"':'').' style="'.html($bg).'">';
+				.'<td'.($id?' id="'.html($id).'"':'').' class="layout" style="'.html($bg).'">';
 
-	return '<table class="borders" cellpadding="0" cellspacing="0">'
+	return '<table class="layout" cellpadding="0" cellspacing="0">'
 		.'<tr class="layout">'
 			."<td class=\"layout\"$sxs$xtra><img alt=\"\" src=\"$img_pre-topleft$img_ext\"></td>"
 			."<td class=\"layout\" style=\"width: {$w1}px;$xs\"$xtra><img alt=\"\" src=\"$img_pre-topleftr$img_ext\"></td>"
@@ -162,7 +162,7 @@ function begin_borders2_str($id, $img_pre,$img_ext, $w1,$w2,$h1,$h2, $cssbg, $xt
 			."<td class=\"layout\"$sxs$xtra><img alt=\"\" src=\"$img_pre-topright$img_ext\"/></td>"
 		.'</tr><tr class="layout">'
 			."<td class=\"layout\" style=\"height: {$h1}px;$xs\"$xtra><img alt=\"\" src=\"$img_pre-topleftd$img_ext\"/></td>"
-			.'<td colspan="3" rowspan="3" '.($id?'id="'.html($id).'" ':'').' style="'.html($bg).'">';
+			.'<td colspan="3" rowspan="3" '.($id?'id="'.html($id).'" ':'').' class="layout" style="'.html($bg).'">';
 }
 function end_borders2_str($img_pre, $img_ext, $w1, $w2, $h1, $h2, $cssbg='', $xtra='', $xs='') {
 	$xs = html($xs);

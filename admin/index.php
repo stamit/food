@@ -12,5 +12,6 @@
 	<li><a href="user-update-demos">user-update-demos</a></li>
 	<li><a href="check-afms">check-afms</a></li>
 	<li><a href="test">test</a></li>
+	<li><a href="../test">The Test Page</a></li>
 </ul>
 <? include 'app/end.php' ?>

@@ -116,7 +116,7 @@
 <? include 'app/begin.php' ?>
 
 <? push(); begin_form($URL.'/receipt'.($row['id']?'?id='.$row['id']:'')) ?>
-<table>
+<table class="fields">
 	<tr><th class="left">Date/time:</th><td><?
 		print input('issued',($row?$row['issued']:
 			date_decode(value('SELECT NOW()'))
@@ -157,7 +157,7 @@
 
 <? push(); begin_form($URL.'/receipt') ?>
 <? print hidden('parent',$row['id']); ?>
-<table>
+<table class="fields">
 	<tr><th class="left">Product:</th><td colspan="5"><?
 		print dropdown('product',null,query('SELECT id AS value, name AS text FROM product ORDER BY name'));
 	?></td></tr>

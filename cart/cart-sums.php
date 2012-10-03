@@ -85,7 +85,7 @@
 <table class="nutrients"><tr>
 	<? foreach (array(1,2,3) as $col) { ?>
 	<td>
-		<table class="nutrients">
+		<table class="fields condensed">
 			<? foreach (query('SELECT * FROM nutrient WHERE `column`='.sql($col)
 			                  .' ORDER BY `order`') as $nutrient) { ?>
 				<?=pernutrient($nutrient)?>

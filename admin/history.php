@@ -31,7 +31,7 @@
 					}
 				}
 			} else {
-				$_SESSION['alert'] = html('Invalid JSON?');
+				$_SESSION['alert'] = 'Invalid JSON?';
 			}
 	
 			$uid = $history[$i]['user_id'];

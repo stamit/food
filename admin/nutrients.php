@@ -10,7 +10,7 @@
 <h3>New nutrient</h3>
 
 <? begin_form('nutrient') ?>
-<table>
+<table class="fields">
 	<tr><th class="left">Row:</th><td><?=
 		number_input('order',value('SELECT MAX(`order`)+10 FROM nutrient'))
 	?></td></tr>

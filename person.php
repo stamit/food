@@ -91,58 +91,31 @@
 <? begin_form() ?>
 <table class="fields">
 <? if (has_right('admin')) { ?>
-	<tr><th class="left">USER ID:</th><td><?
-		print number_input('user_id',$row);
-	?></td></tr>
+	<tr><th>USER ID:</th><td><?=number_input('user_id',$row)?></td></tr>
 <? } ?>
-	<tr><th class="left">Name and surname:</th><td><?
-		print input('name',$row,array(48,64));
-	?></td></tr>
-	<tr><th class="left top">Address:</th><td><?
-		print textarea('address',$row,48,3);
-	?></td></tr>
-	<tr><th class="left">Zip code:</th><td><?
-		print input('postcode',$row,6);
-	?></td></tr>
-	<tr><th class="left">P.O. box:</th><td><?
-		print input('postbox',$row,6);
-	?></td></tr>
-	<tr><th class="left">Phone:</th><td><?
-		print input('phone',$row,16);
-	?></td></tr>
-	<tr><th class="left">Phone:</th><td><?
-		print input('phone2',$row,16);
-	?></td></tr>
-	<tr><th class="left">FAX:</th><td><?
-		print input('fax',$row,16);
-	?></td></tr>
-	<tr><th class="left">Email:</th><td><?
-		print input('email',$row,array(24,127));
-	?></td></tr>
-	<tr><th class="left">Website:</th><td><?
-		print input('website',$row,array(32,127));
-	?></td></tr>
+	<tr><th>Name Sn:</th><td><?=input('name',$row,array(48,64))?></td></tr>
+	<tr><th>Address:</th><td><?=textarea('address',$row,48,3)?></td></tr>
+	<tr><th>Zip code:</th><td><?=input('postcode',$row,6)?></td></tr>
+	<tr><th>P.O. box:</th><td><?=input('postbox',$row,6)?></td></tr>
+	<tr><th>Phone:</th><td><?=input('phone',$row,16)?></td></tr>
+	<tr><th>Phone:</th><td><?=input('phone2',$row,16)?></td></tr>
+	<tr><th>FAX:</th><td><?=input('fax',$row,16)?></td></tr>
+	<tr><th>Email:</th><td><?=input('email',$row,array(24,127))?></td></tr>
+	<tr><th>Website:</th><td><?=input('website',$row,array(32,127))?></td></tr>
 <?/*
-	<tr><th class="left">ΑΦΜ:</th><td><?
-		print input('afm',$row,9);
-	?></td></tr>
-	<tr><th class="left">ΔΟΥ:</th><td><?
-		print input('doy',$row,array(24,48));
-	?></td></tr>
+	<tr><th>ΑΦΜ:</th><td><?=input('afm',$row,9)?></td></tr>
+	<tr><th>ΔΟΥ:</th><td><?=input('doy',$row,array(24,48))?></td></tr>
 */?>
 	<? if (!$OPTION) { ?>
-	<tr><th class="left top">Notes:</th><td><?
-		print textarea('notes',$row,64,10);
-	?></td></tr>
+	<tr><th>Notes:</th><td><?=textarea('notes',$row,64,10)?></td></tr>
 	<? } ?>
 
 <? if (has_right('register-persons')) { ?>
 	<tr><td colspan="2" class="buttons">
-		<?=ok_button('Register')?>
+		<?=ok_button('Save')?>
 	</td></tr>
 <? } ?>
 </table>
-<? end_form() ?>
 
 <? if ($row['id']>0) { ?>
 <h3>Products</h3>
@@ -155,4 +128,5 @@
 <? include 'person-stores.php' ?>
 <? } ?>
 
+<? end_form() ?>
 <? include 'app/end.php' ?>

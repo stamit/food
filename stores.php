@@ -8,6 +8,6 @@
 <? include 'app/begin.php' ?>
 <? include 'stores-table.php' ?>
 <? if (has_right('register-stores')) { ?>
-<p><a href="store">New store</a></p>
+<p class="noprint"><a href="store">New store</a></p>
 <? } ?>
 <? return include 'app/end.php' ?>

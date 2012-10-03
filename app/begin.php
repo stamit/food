@@ -19,7 +19,6 @@ if ( $DEPTH <= 0 && !$INLINE_REQUEST ) {
 		'/lib/forms.js',
 		'/lib/dragdrop.js',
 		'/lib/maketable/maketable.js',
-		'/lib/jquery/jquery-1.2.3.js',
 		'/lib/balloon/balloon.js',
 		'/lib/cal/calendar.js',
 		'/lib/cal/calendar-en.js',
@@ -27,7 +26,6 @@ if ( $DEPTH <= 0 && !$INLINE_REQUEST ) {
 	);
 
 	$DEFAULT_CSS = array(
-		'/app/style.css',
 		'/lib/maketable/maketable.css',
 		'/lib/cal/calendar-system.css',
 	);
@@ -42,6 +40,8 @@ if ( $DEPTH <= 0 && !$INLINE_REQUEST ) {
 <? foreach ($DEFAULT_JS as $js) { ?>
 	<? include_script($URL.$js); ?>
 <? } ?>
+	<link rel="stylesheet" type="text/css" href="<?=html($URL.'/app/style.css')?>">
+	<link rel="stylesheet" type="text/css" href="<?=html($URL.'/app/print.css')?>" media="print">
 <? foreach ($DEFAULT_CSS as $css) { ?>
 	<link rel="stylesheet" type="text/css" href="<?=html($URL.$css)?>">
 <? } ?>
@@ -50,45 +50,67 @@ if ( $DEPTH <= 0 && !$INLINE_REQUEST ) {
 </head>
 
 <body onload="convert_links(document);<? if (strlen($ONLOAD)) echo html($ONLOAD); ?>">
+<div class="wrapper">
 
-<table cellspacing="0" cellpadding="0" class="pagelayout"><tr class="pagerow"><td class="toplevel"><?
-
-	function echo_tab($url,$label) {
-		if ($_SERVER['REQUEST_URI']==$url ||
-		    startswith($_SERVER['REQUEST_URI'],$url.'/') ||
-		    startswith($_SERVER['REQUEST_URI'],$url.'?')) {
-		    	$x = ' class="active"';
-		} else {
-			$x = '';
-		}
-		echo '<li'.$x.'><a href="'.html($url).'">'.$label.'</a></li>';
+<?
+	$TABS = array(
+		'/persons' => 'persons',
+		'/stores' => 'stores',
+		'/products' => 'products',
+		'/foods' => 'foods',
+		'/receipts' => 'receipts',
+		'/purchases' => 'purchases',
+		'/cart' => 'cart',
+	);
+	if (has_right('consumption')) {
+		$TABS['/consumptions'] = 'consumption';
+		$TABS['/stats'] = 'statistics';
+	}
+	$TABS['/user/profile'] = 'user';
+	$TABS['/user/logout'] = 'exit';
+	if (has_right('admin')) {
+		$TABS['/admin/'] = 'ADMIN';
 	}
 
 	if ($_SESSION['user_id']) {
 		echo '<ul class="tabs">';
-		echo_tab($URL.'/persons', 'persons');
-		echo_tab($URL.'/stores', 'stores');
-		echo_tab($URL.'/products', 'products');
-		echo_tab($URL.'/foods', 'foods');
-		echo_tab($URL.'/receipts', 'receipts');
-		echo_tab($URL.'/purchases', 'purchases');
-		echo_tab($URL.'/cart', 'cart');
-		if (has_right('consumption')) {
-			echo_tab($URL.'/consumptions', 'consumption');
-			echo_tab($URL.'/stats', 'statistics');
-		}
-		if ($_SESSION['user_id']) {
-			echo_tab($URL.'/user/profile', 'user');
-			if (has_right('admin')) {
-				echo_tab($URL.'/admin', 'ADMIN');
+		$i=0;
+		$a=0;
+		foreach ($TABS as $url1=>$label) {
+			$url = $URL.$url1;
+
+			$class=array();
+			if ($i==0) $class[]='first';
+			if ($i==count($TABS)-1) $class[]='last';
+			if (!count($class)) $class[] = 'mid';
+
+			if ($a) {
+				$class[] = 'aactive';
+				$a = 0;
 			}
-			echo_tab($URL.'/user/logout', 'exit');
+			if ($_SERVER['REQUEST_URI']==$url ||
+			    startswith($_SERVER['REQUEST_URI'],$url.'/') ||
+			    startswith($_SERVER['REQUEST_URI'],$url.'?')) {
+				$class[] = 'active';
+				$a = 1;
+			}
+
+			echo '<li class="'.implode(' ',$class).'">'
+				.'<span class="tableft"></span>'
+				.'<a href="'.html($url).'">'.$label.'</a>'
+				.'<span class="tabright"></span>'
+			.'</li>';
+			++$i;
 		}
 		echo '</ul>';
 	}
+?>
 
+<div class="wrapper2">
+<div class="wrapper3">
+<?
 	if ($_SESSION['alert']) {
-		echo '<div class="alert">'.$_SESSION['alert'].'</div>';
+		echo '<div class="alert">'.str_replace('\n','<br/>',html($_SESSION['alert'])).'</div>';
 		unset($_SESSION['alert']);
 	}
 

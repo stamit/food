@@ -1,0 +1,37 @@
+.noprint {
+	display: none;
+}
+
+div.wrapper,
+div.wrapper2,
+div.wrapper3 {
+	margin: 0;
+}
+div.footer, div.footerpush {
+	display: none;
+}
+ul.tabs {
+	display: none;
+}
+
+table.fields td.buttons {
+	display: none;
+}
+
+table.listing th.buttons,
+table.listing td.buttons {
+	display: none;
+}
+table.listing tr.bottom,
+table.listing td.bottom {
+	display: none;
+}
+
+input, select, textarea {
+	border: 0;
+	margin: 0;
+}
+
+button, .button {
+	display: none;
+}
