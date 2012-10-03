@@ -19,14 +19,14 @@
 		print number_input('amount','').'€';
 	?></td></tr>
 	<tr><th class="left">Store:</th><td><?
-		print dropdown('store','',query(
-			"SELECT id AS value, CONCAT(name,' - ',IF(LENGTH(address)>40,CONCAT(SUBSTRING(address,1,40),'[...]'),address)) AS text"
+		print dropdown('store','',select(
+			"id AS value, CONCAT(name,' - ',IF(LENGTH(address)>40,CONCAT(SUBSTRING(address,1,40),'[...]'),address)) AS text"
 			.' FROM store ORDER BY name'
 		),'',array('','(unknown store or no store)'))
 	?></td></tr>
 	<tr><th class="left">Seller:</th><td><?
-		print dropdown('person','',query(
-			"SELECT id AS value, name AS text"
+		print dropdown('person','',select(
+			"id AS value, name AS text"
 			.' FROM person ORDER BY name'
 		),'',array('','(owner of above store)'))
 	?></td></tr>

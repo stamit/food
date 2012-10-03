@@ -25,7 +25,7 @@
 				mistake('username','Up to 12 characters');
 			} else if (!preg_match('/^(\pL|\pN|-)*$/u',$_POST['username'])) {
 				mistake('username','Only letters, numbers and hyphens allowed');
-			} else if (value('SELECT COUNT(*) FROM users WHERE username='.sql($_POST['username']).' AND id<>'.sql($row['id']))) {
+			} else if (value('COUNT(*) FROM users WHERE username='.sql($_POST['username']).' AND id<>'.sql($row['id']))) {
 				mistake('username','There is already a user with this username');
 			}
 
@@ -55,7 +55,7 @@
 	}
 
 	if ($row['id']>0) {
-		$row = row('SELECT * FROM users WHERE id='.sql($row['id']));
+		$row = row('* FROM users WHERE id='.sql($row['id']));
 		$HEADING = 'User "'.html($row['username']).'"';
 	} else {
 		$HEADING = 'New user';

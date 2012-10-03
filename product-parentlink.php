@@ -3,7 +3,7 @@ require_once 'app/init.php';
 
 if (posting()) try {
 	$id = intval($_POST['id']);
-	$prod = row('SELECT * FROM product WHERE id='.sql($id));
+	$prod = row('* FROM product WHERE id='.sql($id));
 	if ($prod['parent']===null)
 		mistake('parent','Product has no parent.');
 	if (correct()) {

@@ -28,7 +28,8 @@
 				'search_in'=>'product.name',
 				'edit'=>'none',
 				#'edit'=>'dropdown',
-				#'opts_sql'=>'SELECT id AS value, name AS text FROM product ORDER BY name',
+				#'opts_sql'=>'id AS value, name AS text'
+				#            .' FROM product ORDER BY name',
 			),
 			'consumption.weight*product.energy/product.sample_weight'=>array(
 				'Energy',

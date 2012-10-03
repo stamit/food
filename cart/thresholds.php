@@ -21,7 +21,7 @@
 	if (posting()) try {
 
 		$thrs = array();
-		foreach (query('SELECT id,name FROM nutrient') as $nutrient) {
+		foreach (select('id,name FROM nutrient') as $nutrient) {
 			$name = $nutrient['name'];
 			$thr = array(
 				'nutrient'=>$nutrient['id'],
@@ -111,13 +111,13 @@
 	echo html(capitalize(implode(', ',$ss)));
 } ?>
 <table class="fields">
-<? foreach (query('SELECT * FROM nutrient ORDER BY `order`') as $nutrient) {
-	$threshold = row0('SELECT * FROM threshold'
+<? foreach (select('* FROM nutrient ORDER BY `order`') as $nutrient) {
+	$threshold = row0('* FROM threshold'
 		.' WHERE '.$group_cond
 		.' AND nutrient='.sql($nutrient['id'])
 	);
 	if (v('demographic_group')===null) {
-		$auto_threshold = row0('SELECT * FROM threshold'
+		$auto_threshold = row0('* FROM threshold'
 			.' WHERE user IS NULL'
 			.' AND demographic_group='
 				.sql($user['demographic_group'])

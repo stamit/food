@@ -2,7 +2,7 @@
 	require_once 'app/init.php';
 
 	if (posting()) try {
-		$user = row0('SELECT * FROM users'
+		$user = row0('* FROM users'
 		             .' WHERE email='.sql($_POST['email']));
 		if (!preg_match('/^[a-zA-Z_.0-9-]+@[^.]+(\.[^.]+)+$/',$_POST['email']))
 			mistake('email','This email address is incorrect');

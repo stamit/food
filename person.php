@@ -18,21 +18,23 @@
 		'notes'=>array('',''=>null),
 	));
 
-	if ($row['id']!==null) {
-		$uid = value('SELECT user_id FROM person'
-		             .' WHERE id='.sql(abs($row['id'])));
-		authif($uid==$_SESSION['user_id'] ||
-		       has_right('admin'));
-	}
-
 	if (posting()) try {
 		if (!has_right('register-persons'))
 			mistake('You are not allowed to register persons.');
+
+		if ($row['id']!==null && $row['id']!=0 && !has_right('admin')) {
+			$uid = value0('user_id FROM person'
+				      .' WHERE id='.sql(abs($row['id'])));
+			if ($uid!==null && $uid!=$_SESSION['user_id']) {
+				mistake('You are not allowed to edit this record.');
+			}
+		}
 
 		if (!has_right('admin') || $row['user_id']===null)
 			$row['user_id'] = $_SESSION['user_id'];
 
 		if ($row['id']===null || $row['id']>0) {
+
 			$row['name'] = trim($row['name']);
 			if (mb_strlen($row['name'])<4)
 				mistake('name','At least 4 characters.');
@@ -79,7 +81,7 @@
 	}
 
 	if ($row['id']>0) {
-		$row = row('SELECT * FROM person WHERE id='.sql($row['id']));
+		$row = row('* FROM person WHERE id='.sql($row['id']));
 		$HEADING = 'Person '.html($row['name']);
 	} else {
 		$HEADING = 'New person';

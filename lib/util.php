@@ -183,7 +183,7 @@ function failure($msg=null) {
 
 	if ($msg!==null) {
 		if ($msg instanceof Exception)
-			$msg = $msg->getMessage();
+			$msg = 'The action failed because '.$msg->getMessage().'.';
 		if ($msg!=='')
 			mistake($msg);
 	}

@@ -17,8 +17,9 @@
 		print datetime_input('consumed',($row?$row['consumed']:today()))
 	?></td></tr>
 	<tr><th class="left">Product:</th><td><?
-		print dropdown('product',$row['product'],query(
-			'SELECT id AS value, name AS text FROM product WHERE type=1 ORDER BY name'
+		print dropdown('product',$row['product'],select(
+			'id AS value, name AS text'
+			.' FROM product WHERE type=1 ORDER BY name'
 		))
 	?></td></tr>
 	<tr><th class="left">Weight:</th><td><?

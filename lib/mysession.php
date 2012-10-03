@@ -13,7 +13,7 @@ function mysession_random_string($n=26) {
 function mysession_load() {
 	global $_COOKIE, $SESSION_ID, $_SESSION, $SESSION_TIMEOUT, $SESSION_REMEMBER_DAYS;
 	if ($_COOKIE['SESSION'] !== null) {
-		$SESSION_ROW = row0('SELECT * FROM log_sessions WHERE phpid='.sql($_COOKIE['SESSION']));
+		$SESSION_ROW = row0('* FROM log_sessions WHERE phpid='.sql($_COOKIE['SESSION']));
 	}
 	if ($SESSION_ROW === null) {
 		$_SESSION = array();

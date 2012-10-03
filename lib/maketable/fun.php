@@ -800,7 +800,7 @@ function maketable_sql(&$MAKETABLE, $PARAMS, $only_count=false) {
 
 	$having = $MAKETABLE['having'];
 
-	$sql = "SELECT $project FROM $from"
+	$sql = "$project FROM $from"
 		.(count($where)?" WHERE ".implode(' AND ',$where):'')
 		.$groupby
 		.((!$only_count && count($having))?" HAVING ".implode(' AND ',$having):'')
@@ -987,19 +987,19 @@ function print_maketable(&$MAKETABLE, $PARAMS) {
 		}
 
 		$sql = maketable_sql($MAKETABLE,$PARAMS);
-		$rows = query($sql, intval($limit+1), intval($offset),
-		              $MAKETABLE['db']);
+		$rows = select($sql, intval($limit+1), intval($offset),
+		               $MAKETABLE['db']);
 
 		if (!count($rows) && $offset>0) {
 			$offset -= $limit;
-			$rows = query($sql, intval($limit+1), intval($offset),
-			              $MAKETABLE['db']);
+			$rows = select($sql, intval($limit+1), intval($offset),
+			               $MAKETABLE['db']);
 
 			if (!count($rows) && $offset>0) {
 				$offset = 0;
-				$rows = query($sql, intval($limit+1),
-				              intval($offset),
-				              $MAKETABLE['db']);
+				$rows = select($sql, intval($limit+1),
+				               intval($offset),
+				               $MAKETABLE['db']);
 			}
 		}
 
@@ -1079,7 +1079,7 @@ function print_maketable(&$MAKETABLE, $PARAMS) {
 		$cond = maketable_sql_selectone($MAKETABLE, $keys);
 		$project = maketable_sql_project($MAKETABLE);
 		$groupby = maketable_sql_groupby($MAKETABLE);
-		$row = row("SELECT $project FROM $join WHERE $cond"
+		$row = row("$project FROM $join WHERE $cond"
 		           .(strlen($groupby)?' GROUP BY '.$groupby:''),
 		           $MAKETABLE['db']);
 		print_maketable_row($MAKETABLE, $PARAMS, intval($PARAMS['part']), $row);
@@ -1434,8 +1434,8 @@ function print_maketable_row(&$MAKETABLE, &$PARAMS, $i, &$row) {
 			case 'dropdown':
 				$opts = $col['opts'];
 				if ($opts===null && $col['opts_sql'])
-					$opts=query($col['opts_sql'],null,null,
-					            $MAKETABLE['db']);
+					$opts=select($col['opts_sql'],null,null,
+					             $MAKETABLE['db']);
 				if ($opts===null)
 					$opts = array();
 				print dropdown(
@@ -2024,7 +2024,7 @@ function maketable_insert(&$MAKETABLE, $data) {
 			if ($spec_order === null) {
 				$history[$MAKETABLE['orderfield']] =
 				$instvalues[$broken[1]] = value(
-					"SELECT IFNULL(MAX("
+					"IFNULL(MAX("
 						.$MAKETABLE['orderfield'].
 					"),0)+1 FROM $ordfrom WHERE $ordselect",
 					$MAKETABLE['db']

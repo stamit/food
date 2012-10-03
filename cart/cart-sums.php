@@ -1,7 +1,7 @@
 <? $AUTH=true;
 	require_once 'app/init.php';
 
-	if ($cart===null) $cart = get(v('id'),'cart');
+	if ($cart===null) $cart = fetch('cart.id',v('id'));
 	authif($cart['user_id']==$_SESSION['user_id']);
 
 	if (v('days')!==null) {
@@ -14,15 +14,15 @@
 		return 'SUM(product.'.$x.'*cart_item.multiplier) as '.$x
 		       .', SUM(product.'.$x.'*cart_item.multiplier IS NULL) as null_'.$x;
 	}
-	$fields = array_map('f',col('SELECT name FROM nutrient'));
-	$sums = row('SELECT '.implode(', ',$fields)
+	$fields = array_map('f',col('name FROM nutrient'));
+	$sums = row(implode(', ',$fields)
 	            .' FROM cart_item LEFT JOIN product'
 	            .' ON product.id=cart_item.product'
 	            .' WHERE cart_item.cart='.sql($cart['id']));
 
 	function pernutrient($nut) {
 		global $sums,$cart;
-		$threshold = row0('SELECT * FROM threshold'
+		$threshold = row0('* FROM threshold'
 			.' WHERE nutrient='.sql($nut['id'])
 			.' AND user='.sql($_SESSION['user_id'])
 		);
@@ -86,16 +86,15 @@
 	<? foreach (array(1,2,3) as $col) { ?>
 	<td>
 		<table class="fields condensed">
-			<? foreach (query('SELECT * FROM nutrient WHERE `column`='.sql($col)
-			                  .' ORDER BY `order`') as $nutrient) { ?>
+			<? foreach (select('* FROM nutrient'
+			                   .' WHERE `column`='.sql($col)
+			                   .' ORDER BY `order`') as $nutrient) { ?>
 				<?=pernutrient($nutrient)?>
 			<? } ?>
 		</table>
 	</td>
 	<? } ?>
 </tr></table>
-<p>Price: <?=html(currency_decode(value(
-	'SELECT SUM(price) FROM cart_item'
-	.' WHERE cart='.sql($cart['id'])
-)))?></p>
+<p>Price: <?=html(currency_decode(value('SUM(price) FROM cart_item'
+                                       .' WHERE cart='.sql($cart['id']))))?></p>
 <? return include 'app/end.php' ?>

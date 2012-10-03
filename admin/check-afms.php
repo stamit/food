@@ -4,7 +4,7 @@ require_once 'app/init.php';
 require_once 'lib/validation.php';
 header('Content-type: text/plain; charset='.$ENCODING);
 
-foreach (query('SELECT * FROM person') as $person) {
+foreach (select('* FROM person') as $person) {
 	if ($person['afm']!==null) {
 		$mistake = check_afm($person['afm']);
 		if ( $mistake !== null ) {

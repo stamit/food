@@ -3,8 +3,8 @@
 
 	$cart_id = intval(v('id'));
 	if (!$cart_id) {
-		$carts = query('SELECT id FROM cart'
-		               .' WHERE user_id='.sql($_SESSION['user_id']),1);
+		$carts = select('id FROM cart'
+		                .' WHERE user_id='.sql($_SESSION['user_id']),1);
 		if ($carts) {
 			$cart_id = $carts[0]['id'];
 		} else {
@@ -16,10 +16,10 @@
 	}
 
 	$uid = $_SESSION['user_id'];
-	$demo = value0('SELECT demographic_group FROM users WHERE id='.sql($uid));
-	$threshold_count = value('SELECT COUNT(*) FROM threshold WHERE user='.sql($uid));
+	$demo = value0('demographic_group FROM users WHERE id='.sql($uid));
+	$threshold_count = value('COUNT(*) FROM threshold WHERE user='.sql($uid));
 
-	$cart = row('SELECT * FROM cart WHERE id='.sql($cart_id));
+	$cart = row('* FROM cart WHERE id='.sql($cart_id));
 	authif($cart['user_id']==$_SESSION['user_id']);
 ?>
 <? include 'app/begin.php' ?>

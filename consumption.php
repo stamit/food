@@ -10,7 +10,7 @@
 	));
 
 	if ($row['id']!==null) {
-		$uid = value('SELECT user_id FROM consumption'
+		$uid = value('user_id FROM consumption'
 		             .' WHERE id='.sql(abs($row['id'])));
 		authif($uid==$_SESSION['user_id']);
 	}
@@ -39,8 +39,8 @@
 	}
 
 	if ($row['id']>0) {
-		$row = row('SELECT * FROM consumption WHERE id='.sql($row['id']));
-		$product = row0('SELECT * FROM product WHERE id='.sql($row['product']));
+		$row = row('* FROM consumption WHERE id='.sql($row['id']));
+		$product = row0('* FROM product WHERE id='.sql($row['product']));
 		$HEADING = 'Consumption';
 		if ($row['weight']!==null) {
 			$HEADING .= ' '.html($row['weight']).'g';
@@ -59,15 +59,15 @@
 <?php include 'app/begin.php' ?>
 
 <?php begin_form() ?>
-<table>
+<table class="fields">
 	<tr><th class="left">Date/time:</th><td><?php
 		print date_input('consumed',($row?$row['consumed']:
-			date_decode(value('SELECT NOW()'))
+			date_decode(value('NOW()'))
 		))
 	?></td></tr>
 	<tr><th class="left">Product:</th><td><?php
-		print dropdown('product',$row['product'],query(
-			'SELECT id AS value, name AS text FROM product ORDER BY name'
+		print dropdown('product',$row['product'],select(
+			'id AS value, name AS text FROM product ORDER BY name'
 		))
 	?></td></tr>
 	<tr><th class="left">Units:</th><td><?php

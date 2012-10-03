@@ -7,7 +7,7 @@
 	if ($table!==null && $table!=='' && $id!==null && $id!=='') try {
 		$row = fetch($table,$id);
 
-		$history = query('SELECT * FROM log_database'
+		$history = select('* FROM log_database'
 			.' WHERE `table`='.sql($table)
 			.' AND table_id='.sql($id)
 			.' ORDER BY time'
@@ -54,7 +54,7 @@
 	<table class="fields">
 		<tr>
 			<th class="left">Table:</th>
-			<td><?=dropdown('table',$_GET,query('SHOW TABLES'))?></td>
+			<td><?=dropdown('table',$_GET,select('`table` FROM log_database GROUP BY `table`'))?></td>
 		</tr>
 		<tr>
 			<th class="left">Record ID:</th>

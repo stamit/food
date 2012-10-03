@@ -7,7 +7,7 @@
 	if (posting()) {
 		if ($_POST['_OP_']=='create') {
 			$num = value(
-				'SELECT COUNT(*) FROM cart'
+				'COUNT(*) FROM cart'
 				.' WHERE user_id='.sql($_SESSION['user_id'])
 			);
 			$cart = array(
@@ -21,7 +21,7 @@
 		} else if ($_POST['_OP_']=='delete') {
 			execute('DELETE FROM cart_item WHERE cart='.sql($cart['id']));
 			execute('DELETE FROM cart WHERE id='.sql($cart['id']));
-			$carts = query('SELECT * FROM cart WHERE user_id='.sql($_SESSION['user_id']),1);
+			$carts = select('* FROM cart WHERE user_id='.sql($_SESSION['user_id']),1);
 			$cart = ($carts ? $carts[0] : array('id'=>0));
 		}
 	}
@@ -36,8 +36,8 @@
 		echo ' <button type="button" class="cancelbutton" onclick="'.html('return cart_rename_cancel('.js($ID).')').'"></button>';
 		echo '</span>';
 	} else {
-		echo '"'.dropdown('id',$cart,query(
-			'SELECT id AS value, name AS text FROM cart'
+		echo '"'.dropdown('id',$cart,select(
+			'id AS value, name AS text FROM cart'
 			.' WHERE user_id='.sql($_SESSION['user_id'])
 			.' ORDER BY name'
 		),null,array(0,'(create new)'),'cart_change('.js($ID).')').'"';

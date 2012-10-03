@@ -18,7 +18,7 @@
 	));
 
 	if ($row['id']!==null) {
-		$uid = value('SELECT user_id FROM receipt'
+		$uid = value('user_id FROM receipt'
 		             .' WHERE id='.sql(abs($row['id'])));
 		authif($uid==$_SESSION['user_id'] ||
 		       has_right('admin'));
@@ -33,7 +33,7 @@
 					mistake('person','Receipt from both unknown person and unknown store?');
 			}
 			if ($row['person']===null && $row['store']!==null)
-				$row['person'] = value('SELECT owner FROM store WHERE id='.sql($row['store']));
+				$row['person'] = value('owner FROM store WHERE id='.sql($row['store']));
 			if ($row['parent']!==null && $row['product']===null)
 				mistake('product','Unknown product?');
 			if ($row['length']!==null && $row['length']<=0)
@@ -56,7 +56,7 @@
 			    $row['weight']===null &&
 			    $row['net_weight']===null &&
 			    $row['net_volume']===null) {
-				$prod = row('SELECT * FROM product WHERE'
+				$prod = row('* FROM product WHERE'
 				            .' id='.sql($row['product']));
 				$row['units'] = $prod['typical_units'];
 				$row['net_weight'] = $prod['net_weight'];
@@ -105,7 +105,7 @@
 	}
 
 	if ($row['id']>0) {
-		$row = row('SELECT * FROM receipt WHERE id='.sql($row['id']));
+		$row = row('* FROM receipt WHERE id='.sql($row['id']));
 		$HEADING = 'Receipt';
 	} else {
 		$row = null;
@@ -118,21 +118,28 @@
 <table class="fields">
 	<tr><th class="left">Date/time:</th><td><?
 		print input('issued',($row?$row['issued']:
-			date_decode(value('SELECT NOW()'))
+			date_decode(value('NOW()'))
 		),19);
 	?></td></tr>
 	<tr><th class="left">Price:</th><td><?
 		print number_input('amount',($row?$row['amount']:'')).' €';
 	?></td></tr>
 	<tr><th class="left">Store:</th><td><?
-		print dropdown('store',($row?$row['store']:''),query(
-			"SELECT id AS value, CONCAT(name,' - ',IF(LENGTH(address)>40,CONCAT(SUBSTRING(address,1,40),'[...]'),address)) AS text"
+		print dropdown('store',($row?$row['store']:''),select(
+			"id AS value, "
+			."CONCAT(name,' - ',"
+				."IF(LENGTH(address)>40,"
+					."CONCAT(SUBSTRING(address,1,40),"
+					         ."'[...]'),"
+					."address"
+				.")"
+			.") AS text"
 			.' FROM store ORDER BY name'
 		),'',array('','(unknown store or no store)'));
 	?></td></tr>
 	<tr><th class="left">Seller person:</th><td><?
-		print dropdown('person',($row?$row['person']:''),query(
-			"SELECT id AS value, name AS text"
+		print dropdown('person',($row?$row['person']:''),select(
+			"id AS value, name AS text"
 			.' FROM person ORDER BY name'
 		),'',array('','(owner of above store)'));
 	?></td></tr>
@@ -149,7 +156,7 @@
 <? if ($row['id'] && $row['parent']===null) { ?>
 
 <h3>Items
-	<?=$row['id'] ? '(€'.value('SELECT SUM(amount) FROM receipt WHERE parent='.sql($row['id'])).')' : ''?>
+	<?=$row['id'] ? '(€'.value('SUM(amount) FROM receipt WHERE parent='.sql($row['id'])).')' : ''?>
 </h3>
 
 <? $mtid = include 'receipt-children.php'; ?>
@@ -158,7 +165,7 @@
 <? print hidden('parent',$row['id']); ?>
 <table class="fields">
 	<tr><th class="left">Product:</th><td colspan="5"><?
-		print dropdown('product',null,query('SELECT id AS value, name AS text FROM product ORDER BY name'));
+		print dropdown('product',null,select('id AS value, name AS text FROM product ORDER BY name'));
 	?></td></tr>
 	<tr>
 		<th class="left">Rec.Price:</th><td><?

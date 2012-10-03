@@ -6,7 +6,7 @@ ini_set('include_path',dirname(dirname(__FILE__)));
 require_once 'app/init.php';
 header('Content-type: text/plain');
 
-foreach (query('SELECT * FROM users') as $user) {
+foreach (select('* FROM users') as $user) {
 	$olddemo = $user['demographic_group'];
 	$demo = find_demographic_group($user);
 	if ($olddemo != $demo) {

@@ -5,7 +5,7 @@
 		if ($_SESSION['user_id']) {
 			mistake('You are already logged in.');
 		} else {
-			$user = row0('SELECT * FROM users'
+			$user = row0('* FROM users'
 			             .' WHERE username='.sql($_POST['username']));
 
 			if ($user !== null

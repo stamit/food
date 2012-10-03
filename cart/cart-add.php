@@ -1,11 +1,11 @@
 <? $AUTH=true;
 	require_once 'app/init.php';
 
-	$cart = get(v('cart.id'),'cart');
+	$cart = fetch('cart.id',v('cart.id'));
 	authif($cart['user_id']==$_SESSION['user_id']);
 
 	if (posting()) try {
-		$prod = get(v('product.id'),'product');
+		$prod = fetch('product.id',v('product.id'));
 		$row = array(
 			'cart'=>v('cart.id'),
 			'product'=>$prod['id'],

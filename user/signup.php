@@ -5,7 +5,7 @@
 	if (posting()) try {
 		if (!preg_match('/^[a-zA-Z_.0-9-]+@[^.]+(\.[^.]+)+$/',$_POST['email']))
 			mistake('email','This is not a syntactically valid email address');
-		if (value('SELECT COUNT(*) FROM users WHERE email='.sql($_POST['email'])))
+		if (value('COUNT(*) FROM users WHERE email='.sql($_POST['email'])))
 			mistake('email','There is already a user with this email address');
 
 		$_POST['username'] = trim($_POST['username']);
@@ -15,7 +15,7 @@
 			mistake('username','Up to 12 characters');
 		} else if (!preg_match('/^(\pL|\pN|-)*$/u',$_POST['username'])) {
 			mistake('username','Only letters, numbers and hyphens allowed');
-		} else if (value('SELECT COUNT(*) FROM users WHERE username='.sql($_POST['username']))) {
+		} else if (value('COUNT(*) FROM users WHERE username='.sql($_POST['username']))) {
 			mistake('username','There is already a user with this username');
 		}
 
@@ -36,7 +36,7 @@
 				'confirmation'=>'*'.$confirm_code,
 			));
 			if (value('COUNT(*) FROM users')==1) {
-				foreach (query('SELECT * FROM `right`') as $right) {
+				foreach (select('* FROM `right`') as $right) {
 					insert('user_right',array('user'=>$user_id,'right'=>$right['id']));
 				}
 			}

@@ -23,7 +23,7 @@
 				'search'=>'mid',
 				'search_in'=>'product.name',
 				'edit'=>'dropdown',
-				'opts_sql'=>'SELECT id AS value, name AS text'
+				'opts_sql'=>'id AS value, name AS text'
 				            .' FROM product ORDER BY name',
 				'width'=>'220px',
 				'size'=>'216px',

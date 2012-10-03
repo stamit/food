@@ -1,7 +1,7 @@
 <? $AUTH=true;
 	require_once 'app/init.php';
 	if ($row===null) {
-		$row = get(intval($_GET['id']),'product');
+		$row = fetch('product.id',intval($_GET['id']));
 	}
 ?>
 <h3>Nutritional information</h3>
@@ -39,10 +39,10 @@
 <? foreach (array(1,2,3,4) as $col) { ?>
 <td class="<?=$col==4?' last':''?>">
 	<table class="fields">
-	<? foreach (query('SELECT * FROM nutrient WHERE `column`='.$col
-	                  .' ORDER BY `order`') as $nut) { ?>
+	<? foreach (select('* FROM nutrient WHERE `column`='.$col
+	                   .' ORDER BY `order`') as $nut) { ?>
 		<tr><th><?=html($nut['description'])?>:</th><td><?
-			$pn = row0('SELECT * FROM product_nutrient'
+			$pn = row0('* FROM product_nutrient'
 			           .' WHERE product='.sql($row['id'])
 			           .' AND nutrient='.sql($nut['id']));
 			print number_input(

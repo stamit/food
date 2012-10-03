@@ -51,7 +51,7 @@
 		foreach ($fields as $f) {
 			$a[] = 'SUM(consumption.weight*product.'.$f.'/product.sample_weight) AS '.$f;
 		}
-		$row = row('SELECT '.implode(',',$a)
+		$row = row(implode(',',$a)
 			.' FROM consumption JOIN product ON consumption.product=product.id'
 			.' WHERE '.($_POST['since']?sql($_POST['since']).'<=consumed':'TRUE')
 			.' AND '.($_POST['until']?'consumed<='.sql($_POST['until']):'TRUE')

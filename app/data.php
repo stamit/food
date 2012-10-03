@@ -107,13 +107,13 @@ function authenticate_user($user,$password) {
 
 function product_nutrient_on_change($prodid,$nutid,$value,$nutname=null) {
 	if ($nutname===null) {
-		$nutname = value('SELECT name FROM nutrient'
+		$nutname = value('name FROM nutrient'
 		                 .' WHERE id='.sql($nutid));
 	}
 
-	foreach (query('SELECT id, product FROM product_nutrient'
-	               .' WHERE nutrient='.sql($nutid)
-	               .' AND source=1 AND id2='.sql($prodid)) as $pn) {
+	foreach (select('id, product FROM product_nutrient'
+	                .' WHERE nutrient='.sql($nutid)
+	                .' AND source=1 AND id2='.sql($prodid)) as $pn) {
 		$mult=product_nutrient_link_multiplier($pn['product'],$prodid);
 		if ($mult===null) {
 			$value2 = null;
@@ -123,25 +123,25 @@ function product_nutrient_on_change($prodid,$nutid,$value,$nutname=null) {
 			$value2 = null;
 		}
 
-		put(array(
+		store('product_nutrient.id',array(
 			'id'=>$pn['id'],
 			'value'=>$value2,
-		),'product_nutrient');
+		));
 
-		if (value('SELECT basetable FROM nutrient'
+		if (value('basetable FROM nutrient'
 		          .' WHERE id='.sql($nutid))) {
-		        put(array(
+		        store('product.id',array(
 		        	'id'=>$pn['product'],
 		        	$nutname=>$value2,
-		        ),'product');
+		        ));
 		}
 		product_nutrient_on_change($pn['product'],$nutid,$value2,
 		                               $nutname);
 	}
 
-	$par = value0('SELECT parent FROM product WHERE id='.sql($prodid));
+	$par = value0('parent FROM product WHERE id='.sql($prodid));
 	if ($par!==null) {
-		$parsrc = value0('SELECT source FROM product_nutrient'
+		$parsrc = value0('source FROM product_nutrient'
 		                 .' WHERE product='.sql($par)
 		                 .' AND nutrient='.sql($nutid));
 		if ($parsrc==2) {
@@ -151,8 +151,8 @@ function product_nutrient_on_change($prodid,$nutid,$value,$nutname=null) {
 }
 
 function product_children_link($prodid) {
-	foreach (query('SELECT * FROM nutrient') as $nut) {
-		$pn = row0('SELECT * FROM product_nutrient'
+	foreach (select('* FROM nutrient') as $nut) {
+		$pn = row0('* FROM product_nutrient'
 		           .' WHERE product='.sql($prodid)
 		           .' AND nutrient='.sql($nut['id']));
 		if ( $pn===null || ($pn['value']===null && !$pn['source']) ) {
@@ -165,11 +165,11 @@ function product_children_link($prodid) {
 
 function product_nutrient_link_to_children($prodid,$nutid,$nutname=null) {
 	if ($nutname===null) {
-		$nutname = value('SELECT name FROM nutrient'
+		$nutname = value('name FROM nutrient'
 		                 .' WHERE id='.sql($nutid));
 	}
 
-	foreach (col('SELECT id FROM product'
+	foreach (col('id FROM product'
 	             .' WHERE parent='.sql($prodid)) as $cid) {
 		if (product_nutrient_check_for_loops($cid,$nutid,$prodid)) {
 			throw new LoggedException(
@@ -178,12 +178,12 @@ function product_nutrient_link_to_children($prodid,$nutid,$nutname=null) {
 		}
 	}
 
-	$prod = row('SELECT * FROM product WHERE id='.sql($prodid));
+	$prod = row('* FROM product WHERE id='.sql($prodid));
 
 	if ($prod['sample_weight']===null) {
 		$value = null;
 	} else {
-		$r = row('SELECT SUM(pn.value*p.market_weight/(p.sample_weight-IFNULL(p.refuse_weight,0)))/SUM(p.market_weight) AS value, SUM(pn.value IS NULL) AS empty, COUNT(*) AS total FROM product p LEFT JOIN product_nutrient pn ON (pn.product=p.id AND pn.nutrient='.sql($nutid).') WHERE p.parent='.sql($prodid).' AND p.price_to_parent AND p.market_weight>0');
+		$r = row('SUM(pn.value*p.market_weight/(p.sample_weight-IFNULL(p.refuse_weight,0)))/SUM(p.market_weight) AS value, SUM(pn.value IS NULL) AS empty, COUNT(*) AS total FROM product p LEFT JOIN product_nutrient pn ON (pn.product=p.id AND pn.nutrient='.sql($nutid).') WHERE p.parent='.sql($prodid).' AND p.price_to_parent AND p.market_weight>0');
 		if ($r['empty'] || !$r['total']) {
 			$value = null;
 		} else {
@@ -192,8 +192,8 @@ function product_nutrient_link_to_children($prodid,$nutid,$nutname=null) {
 		}
 	}
 
-	put(array(
-		'id'=>value0('SELECT id FROM product_nutrient'
+	store('product_nutrient.id',array(
+		'id'=>value0('id FROM product_nutrient'
 		             .' WHERE product='.sql($prodid)
 		             .' AND nutrient='.sql($nutid)),
 		'product'=>$prodid,
@@ -201,13 +201,13 @@ function product_nutrient_link_to_children($prodid,$nutid,$nutname=null) {
 		'value'=>$value,
 		'source'=>2,
 		'id2'=>$prodid,
-	),'product_nutrient');
+	));
 
-	if (value('SELECT basetable FROM nutrient WHERE id='.sql($nutid))) {
-		put(array(
+	if (value('basetable FROM nutrient WHERE id='.sql($nutid))) {
+		store('product.id',array(
 			'id'=>$prodid,
 			$nutname=>$value,
-		),'product');
+		));
 	}
 
 	product_nutrient_on_change($prodid,$nutid,$value,$nutname);
@@ -270,9 +270,9 @@ function product_fooddb_import($prodid,$fdbid) {
 	global $fooddb_mapping;
 	global $fooddb_multipliers;
 
-	$pro = row('SELECT * FROM product WHERE id='.sql($prodid));
+	$pro = row('* FROM product WHERE id='.sql($prodid));
 
-	$fdb = row0('SELECT * FROM fd_nutrients WHERE NDB_No='.sql($fdbid));
+	$fdb = row0('* FROM fd_nutrients WHERE NDB_No='.sql($fdbid));
 	if ($fdb===null) throw new LoggedException('FOODDB ID does not exist: '.intval($fdbid));
 
 	$product = array(
@@ -288,9 +288,9 @@ function product_fooddb_import($prodid,$fdbid) {
 
 	$product['refuse_weight'] = $fdb['Refuse_Pct']*$multiplier;
 
-	foreach (query('SELECT * FROM nutrient') as $nut) {
+	foreach (select('* FROM nutrient') as $nut) {
 		$mapping = $fooddb_mapping[$nut['name']];
-		$pn = row0('SELECT * FROM product_nutrient'
+		$pn = row0('* FROM product_nutrient'
 		           .' WHERE product='.sql($prodid)
 		           .' AND nutrient='.sql($nut['id']));
 		if ($mapping!==null && $fdb[$mapping]!==null && $pn===null) {
@@ -298,13 +298,13 @@ function product_fooddb_import($prodid,$fdbid) {
 			if ($fooddb_multipliers[$nut['name']]!==null) {
 				$value *= $fooddb_multipliers[$nut['name']];
 			}
-			put(array(
+			store('product_nutrient.id',array(
 				'product'=>$prodid,
 				'nutrient'=>$nut['id'],
 				'value'=>$value,
 				'source'=>3,
 				'id2'=>$fdbid,
-			),'product_nutrient');
+			));
 			if ($nut['basetable']) {
 				$product[$nut['name']] = $value;
 			}
@@ -317,17 +317,17 @@ function product_fooddb_import($prodid,$fdbid) {
 }
 
 function product_clearlink($prodid,$source) {
-	foreach (query('SELECT * FROM product_nutrient'
-	               .' WHERE product='.sql($prodid)
-	               .' AND source='.sql($source)) as $pn) {
-		$nut = fetch($pn['nutrient'],'nutrient');
+	foreach (select('* FROM product_nutrient'
+	                .' WHERE product='.sql($prodid)
+	                .' AND source='.sql($source)) as $pn) {
+		$nut = fetch('nutrient.id',$pn['nutrient']);
 		if ($nut['basetable']) {
-			put(array(
+			store('product.id',array(
 				'id'=>$prodid,
 				$nut['name']=>null,
-			),'product');
+			));
 		}
-		put(array('id'=> - $pn['id']),'product_nutrient');
+		store('product_nutrient.id',array('id'=> - $pn['id']));
 
 		product_nutrient_on_change(
 			$prodid,
@@ -338,9 +338,9 @@ function product_clearlink($prodid,$source) {
 }
 
 function product_nutrient_link_multiplier($prodid,$parentid) {
-	$par = row('SELECT sample_weight,sample_volume,refuse_weight,refuse_volume'
+	$par = row('sample_weight,sample_volume,refuse_weight,refuse_volume'
 	           .' FROM product WHERE id='.sql($parentid));
-	$prod = row('SELECT sample_weight,sample_volume,refuse_weight,refuse_volume'
+	$prod = row('sample_weight,sample_volume,refuse_weight,refuse_volume'
 	            .' FROM product WHERE id='.sql($prodid));
 	if ($par['sample_weight']!==null && $prod['sample_weight']!==null) {
 		$multiplier = ($prod['sample_weight']-ifnull($prod['refuse_weight'],0))
@@ -358,19 +358,19 @@ function product_parent_link($prodid,$parentid) {
 	$multiplier = product_nutrient_link_multiplier($prodid,$parentid);
 
 	if ($multiplier===null) {
-		$par = row('SELECT * FROM product WHERE id='.sql($parentid));
-		put(array(
+		$par = row('* FROM product WHERE id='.sql($parentid));
+		put('product.id',array(
 			'id'=>$prodid,
 			'sample_weight'=>$par['sample_weight'],
 			'sample_volume'=>$par['sample_volume'],
 		        'refuse_weight'=>$par['refuse_weight'],
 		        'refuse_volume'=>$par['refuse_volume'],
-		),'product');
+		));
 		$multiplier = 1.0;
 	}
 
-	foreach (query('SELECT * FROM nutrient') as $nut) {
-		$pn = row0('SELECT * FROM product_nutrient'
+	foreach (select('* FROM nutrient') as $nut) {
+		$pn = row0('* FROM product_nutrient'
 		           .' WHERE product='.sql($prodid)
 		           .' AND nutrient='.sql($nut['id']));
 		if ( $pn===null || ($pn['value']===null && !$pn['source']) ) {
@@ -385,7 +385,7 @@ function product_nutrient_link($prodid,$nut,$linkid,$multiplier=null) {
 	if ($multiplier===null)
 		$multiplier=product_nutrient_link_multiplier($prodid,$linkid);
 
-	$pn = row0('SELECT * FROM product_nutrient'
+	$pn = row0('* FROM product_nutrient'
 	           .' WHERE product='.sql($prodid)
 	           .' AND nutrient='.sql($nut['id']));
 
@@ -395,7 +395,7 @@ function product_nutrient_link($prodid,$nut,$linkid,$multiplier=null) {
 		);
 	}
 
-	$value = value0('SELECT value FROM product_nutrient'
+	$value = value0('value FROM product_nutrient'
 	                 .' WHERE product='.sql($linkid)
 	                 .' AND nutrient='.sql($nut['id']));
 	if ($multiplier===null) {
@@ -404,16 +404,16 @@ function product_nutrient_link($prodid,$nut,$linkid,$multiplier=null) {
 		$value *= $multiplier;
 	}
 
-	put(array(
+	store('product_nutrient.id',array(
 		'id'=>$pn['id'],
 		'product'=>$prodid,
 		'nutrient'=>$nut['id'],
 		'value'=>$value,
 		'source'=>1,
 		'id2'=>$linkid,
-	),'product_nutrient');
+	));
 	if ($nut['basetable']) {
-		put(array(
+		store('product.id',array(
 			'id'=>$prodid,
 			$nut['name']=>$value,
 		));
@@ -425,7 +425,7 @@ function product_nutrient_check_for_loops($prodid,$nutid,$oid) {
 	if ($prodid == $oid)
 		return true;
 
-	$pn = row0('SELECT * FROM product_nutrient'
+	$pn = row0('* FROM product_nutrient'
 	           .' WHERE product='.sql($prodid)
 	           .' AND nutrient='.sql($nutid));
 
@@ -435,7 +435,7 @@ function product_nutrient_check_for_loops($prodid,$nutid,$oid) {
 		}
 
 	} else if ($pn['source']==2) {
-		foreach (col('SELECT id FROM product'
+		foreach (col('id FROM product'
 		             .' WHERE parent='.sql($prodid)) as $cid) {
 			if (product_nutrient_check_for_loops($cid,$nutid,$oid)){
 				return true;
@@ -448,11 +448,11 @@ function product_nutrient_check_for_loops($prodid,$nutid,$oid) {
 
 function get_right($right) {
 	if (is_int($right)) {
-		return row('SELECT * FROM `right` WHERE id='.sql($right));
+		return row('* FROM `right` WHERE id='.sql($right));
 	} else if (is_array($right)) {
 		return $right;
 	} else {
-		return row('SELECT * FROM `right` WHERE name='.sql($right));
+		return row('* FROM `right` WHERE name='.sql($right));
 	}
 }
 
@@ -476,12 +476,12 @@ function has_right($right, $user_id=0) {
 	if (!$user_id)
 		return 0;
 
-	return value('SELECT COUNT(*) FROM user_right WHERE user='.sql($user_id).' AND `right`='.sql($right['id']));
+	return value('COUNT(*) FROM user_right WHERE user='.sql($user_id).' AND `right`='.sql($right['id']));
 }
 
 function product_equivalents_for_stats($prod_id,&$equivs) {
 	$equivs['0'.$prod_id] = true;
-	foreach (col('SELECT id FROM product WHERE parent='.sql($prod_id)
+	foreach (col('id FROM product WHERE parent='.sql($prod_id)
 	             .' AND price_to_parent') as $child_id) {
 		if (!$equivs['0'.$child_id]) {
 			product_equivalents_for_stats($child_id,$equivs);
@@ -526,7 +526,7 @@ function product_calc_typicals($prod) {
 		'volume'=>0.0, 'volume_count'=>0,
 		'volume_sum'=>0.0, 'volume_price_sum'=>0.0,
 	);
-	foreach (query('SELECT * FROM receipt'.$where) as $rec) {
+	foreach (select('* FROM receipt'.$where) as $rec) {
 		if ($rec['units']!==null) {
 			$sums['units'] += $rec['units'];
 			++$sums['units_count'];
@@ -803,7 +803,7 @@ function find_demographic_group($user) {
 		$conds[] = 'pregnancy IS NULL';
 	}
 
-	$groups = col('SELECT id FROM demographic_group'
+	$groups = col('id FROM demographic_group'
 	              .' WHERE '.implode(' AND ',$conds));
 	if ($groups) {
 		return $groups[0];
@@ -817,21 +817,21 @@ function user_update_thresholds($user) {
 
 	if ($user['demographic_group']===null) {
 		$demo = find_demographic_group($user);
-		put(array(
+		store('users.id',array(
 			'id'=>$user['id'],
 			'demographic_group'=>$demo,
-		),'users');
+		));
 	} else {
 		$demo = $user['demographic_group'];
 	}
 
-	foreach (query('SELECT * FROM nutrient') as $nut) {
-		$thr = row0('SELECT * FROM threshold'
+	foreach (select('* FROM nutrient') as $nut) {
+		$thr = row0('* FROM threshold'
 		            .' WHERE user='.sql($user['id'])
 		            .' AND nutrient='.sql($nut['id']));
 
 		if ($thr===null) {
-			$def_thr = row0('SELECT * FROM threshold WHERE '
+			$def_thr = row0('* FROM threshold WHERE '
 				.($demo===null
 					? 'demographic_group IS NULL'
 					: 'demographic_group='.sql($demo)
@@ -846,7 +846,7 @@ function user_update_thresholds($user) {
 			}
 
 		} else if ($thr['demographic_group']!==null) {
-			$def_thr = row0('SELECT * FROM threshold'
+			$def_thr = row0('* FROM threshold'
 				.' WHERE demographic_group='
 					.sql($user['demographic_group'])
 				.' AND user IS NULL'
@@ -857,7 +857,7 @@ function user_update_thresholds($user) {
 				$def_thr['user'] = $user['id'];
 				store('threshold.id',$def_thr);
 			} else {
-				put(array('id'=>-$thr['id']),'threshold');
+				store('threshold.id',array('id'=>-$thr['id']));
 			}
 		}
 	}

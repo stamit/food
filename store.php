@@ -49,7 +49,7 @@
 	}
 
 	if ($row['id']>0) {
-		$row = row('SELECT * FROM store WHERE id='.sql($row['id']));
+		$row = row('* FROM store WHERE id='.sql($row['id']));
 		$HEADING = 'Store "'.html($row['name']).'"';
 	} else {
 		$HEADING = 'New store';
@@ -61,8 +61,8 @@
 <table class="fields">
 	<tr><th class="left">Owner:</th><td><?
 		print dropdown('owner',$row,
-			query('SELECT id AS value, name AS text'
-			      .' FROM person ORDER BY name'),
+			select('id AS value, name AS text'
+			       .' FROM person ORDER BY name'),
 		0, array('','(unknown)'));
 	?></td></tr>
 	<tr><th class="left">Name of store:</th><td><?

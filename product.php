@@ -30,7 +30,7 @@
 		'refuse_weight'=>array(0.0,''=>null),
 		'refuse_volume'=>array(0.0,''=>null),
 	);
-	foreach (col('SELECT name FROM nutrient WHERE basetable') as $name)
+	foreach (col('name FROM nutrient WHERE basetable') as $name)
 		$proto[$name] = array(0.0,''=>null);
 	$row = given('product.id', $proto);
 	$old = fetch('product.id',$row['id']);
@@ -44,12 +44,12 @@
 	}
 
 	if ($row['id']===null && $row['parent']!==null) {
-		$row2 = row0('SELECT * FROM product'
+		$row2 = row0('* FROM product'
 		             .' WHERE id='.sql($row['parent']));
 		if ($row2!==null) {
-			foreach (query('SELECT * FROM nutrient') as $nut) {
+			foreach (select('* FROM nutrient') as $nut) {
 				$pn = row0(
-					'SELECT * FROM product_nutrient'
+					'* FROM product_nutrient'
 					.' WHERE product='.sql($row['parent'])
 					.' AND nutrient='.sql($nut['id'])
 				);
@@ -78,7 +78,7 @@
 			if ($row['barcode']!==null)
 				$row['barcode'] = trim($row['barcode']);
 			$oldrow = row0(
-				'SELECT * FROM product'
+				'* FROM product'
 				.' WHERE barcode='.sql($row['barcode'])
 				.($row['id']!==null ?
 					' AND id<>'.sql($row['id'])
@@ -93,7 +93,7 @@
 			$row['name'] = trim($row['name']);
 			if (mb_strlen($row['name'])<4)
 				mistake('name','At least 4 characters.');
-			if ( value('SELECT COUNT(*) FROM product'
+			if ( value('COUNT(*) FROM product'
 			           .' WHERE name='.sql($row['name'])
 			           .($row['id']!==null?
 			           	' AND id<>'.sql($row['id'])
@@ -156,12 +156,12 @@
 				if ($par==$row['id']) {
 					mistake('parent','Forms a circle.');
 				}
-				$par = value('SELECT parent FROM product'
+				$par = value('parent FROM product'
 				             .' WHERE id='.sql($par));
 			}
 		}
 
-		foreach (query('SELECT * FROM nutrient') as $nut)
+		foreach (select('* FROM nutrient') as $nut)
 		if ($POST[$nut['name']]!==null) {
 			if ($row['sample_weight']===null
 			    && $row['sample_volume']===null) {
@@ -175,9 +175,9 @@
 		if (correct()) {
 			$row['id'] = store('product.id',$row);
 
-			foreach (query('SELECT * FROM nutrient') as $nut)
+			foreach (select('* FROM nutrient') as $nut)
 			if (array_key_exists($nut['name'],$_POST)) {
-				$pn = row0('SELECT * FROM product_nutrient'
+				$pn = row0('* FROM product_nutrient'
 				           .' WHERE product='.sql($row['id'])
 				           .' AND nutrient='.sql($nut['id']));
 				$value = $_POST[$nut['name']]=='' ? null
@@ -240,8 +240,8 @@
 	}
 
 	if ($row['id']>0) {
-		$row = row('SELECT * FROM product WHERE id='.sql($row['id']));
-		$owner = row0('SELECT * FROM person WHERE id='.sql($row['owner']));
+		$row = row('* FROM product WHERE id='.sql($row['id']));
+		$owner = row0('* FROM person WHERE id='.sql($row['owner']));
 		$HEADING = 'Product "'.html($row['name']).($owner ? ' ('.$owner['name'].')' : '').'"';
 	} else {
 		$HEADING = 'New product';
@@ -273,7 +273,7 @@
 				<?=input('barcode',$row,13,$disabled)?>
 
 				<? if ($row['id']) {
-					$np=value('SELECT COUNT(*) FROM receipt'
+					$np=value('COUNT(*) FROM receipt'
 					          .' WHERE product='
 					          .sql($row['id'])
 					          .' AND user_id='
@@ -304,8 +304,8 @@
 
 			<tr><th>Manufacturer:</th><td>
 				<?=dropdown('maker',$row,
-				            query('SELECT id AS value, name AS text'
-				                  .' FROM person ORDER BY name'),
+				            select('id AS value, name AS text'
+				                   .' FROM person ORDER BY name'),
 				            $disabled, array('','(anyone or unknown)'))?>
 
 				<? if ($row['maker']) {
@@ -315,8 +315,8 @@
 
 			<tr><th>Packager:</th><td>
 				<?=dropdown('packager',$row,
-				            query('SELECT id AS value, name AS text'
-				                  .' FROM person ORDER BY name'),
+				            select('id AS value, name AS text'
+				                   .' FROM person ORDER BY name'),
 				            $disabled, array('','(anyone or unknown)'))?>
 
 				<? if ($row['packager']) {
@@ -326,8 +326,8 @@
 
 			<tr><th>Importer:</th><td>
 				<?=dropdown('importer',$row,
-				            query('SELECT id AS value, name AS text'
-				                  .' FROM person ORDER BY name'),
+				            select('id AS value, name AS text'
+				                   .' FROM person ORDER BY name'),
 				            $disabled,
 				            array('', '(anyone or unknown or local product)'))?>
 				
@@ -338,8 +338,8 @@
 
 			<tr><th>Distributor:</th><td>
 				<?=dropdown('distributor',$row,
-				            query('SELECT id AS value, name AS text'
-				                  .' FROM person ORDER BY name'),
+				            select('id AS value, name AS text'
+				                   .' FROM person ORDER BY name'),
 				            $disabled, array('','(anyone or unknown)'))?>
 				<? if ($row['distributor']) {
 					print ' <a href="'.html('person?id='.urlencode($row['distributor'])).'"><img src="app/link.png" alt="go" class="icon"></a>';
@@ -427,8 +427,8 @@
 				-
 				<?=number_input('store_temp_max',$row,3,$disabled)?>°C,
 				in 
-				<?=dropdown('store_conditions',$row,query(
-					'SELECT id AS value,description AS text'
+				<?=dropdown('store_conditions',$row,select(
+					'id AS value,description AS text'
 					.' FROM storage_conditions'
 				),null,array('','(unknown)'))?>
 			</td></tr>
@@ -446,9 +446,9 @@
 
 			<tr><th>Variation of:</th><td>
 				<?=dropdown('parent',$row,
-				            query('SELECT id AS value, name AS text FROM product'
-				                  .($row['id']?' WHERE id<>'.sql($row['id']):'')
-				                  .' ORDER BY name'),
+				            select('id AS value, name AS text FROM product'
+				                   .($row['id']?' WHERE id<>'.sql($row['id']):'')
+				                   .' ORDER BY name'),
 				            $disabled, array('','(root product)'))?>
 
 				<? if ($row['parent']) {
@@ -456,7 +456,7 @@
 				} ?>
 			</td></tr>
 			<tr><th>Variations:</th><td><?
-				foreach (query('SELECT id,name FROM product WHERE parent='.sql($row['id'])) as $i=>$x) {
+				foreach (select('id,name FROM product WHERE parent='.sql($row['id'])) as $i=>$x) {
 					if ($i) print '<br />';
 					print '<a href="product?id='.html(urlencode($x['id'])).'">'
 						.html($x['name'])

@@ -5,7 +5,7 @@ require_once 'lib/email.php';
 function send_email_template($name, $headers, $vars) {
 	global $EMAIL_FROM;
 
-	$tpl = row('SELECT * FROM email_templates WHERE name='.sql($name));
+	$tpl = row('* FROM email_templates WHERE name='.sql($name));
 
 	$a=array();
 	$b=array();

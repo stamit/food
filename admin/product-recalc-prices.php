@@ -8,7 +8,7 @@ ini_set('include_path',dirname(dirname(__FILE__)));
 require_once 'app/init.php';
 header('Content-type: text/plain; charset='.$ENCODING);
 
-foreach (query('SELECT * FROM product') as $prod) {
+foreach (select('* FROM product') as $prod) {
 	echo $prod['id']."\n";
 
 	product_calc_typicals($prod);

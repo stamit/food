@@ -7,6 +7,10 @@ require_once 'app/settings.php';
 require_once 'app/data.php';
 require_once 'app/emailtpl.php';
 
+if ($URL===null) $URL='';
+$DIR=dirname(dirname(__FILE__));
+
+
 function my_error_handler($errno, $err_str, $err_file, $err_line) {
 	global $PRODUCTION_SERVER;
 
@@ -33,6 +37,7 @@ function my_error_handler($errno, $err_str, $err_file, $err_line) {
 		exit;
 	}
 }
+set_error_handler('my_error_handler');
 
 function my_exception_handler($exception) {
 	global $URL;
@@ -51,13 +56,8 @@ function my_exception_handler($exception) {
 	}
 	exit;
 }
-
-
-if ($URL===null) $URL='';
-$DIR=dirname(dirname(__FILE__));
-
-set_error_handler('my_error_handler');
 set_exception_handler('my_exception_handler');
+
 error_reporting(E_ERROR);
 
 if ($CONTENT_TYPE === null) $CONTENT_TYPE = 'text/html';
@@ -206,7 +206,7 @@ $DB = connect($DB);
 
 # load configuration
 try {
-	foreach (query('SELECT * FROM options') as $o) {
+	foreach (select('* FROM options') as $o) {
 		$GLOBALS[$o['name']] = $o['value'];
 		define($o['name'],$o['value']);
 	}
@@ -270,7 +270,7 @@ function log_url($url,&$host_id,&$url_id) {
 	}
 
 	if ($pieces['host']) {
-		$host_id = value0('SELECT id FROM log_hosts'
+		$host_id = value0('id FROM log_hosts'
 		                  .' WHERE host='.sql($pieces['host']));
 		if ($host_id===null) {
 			$host_id = insert('log_hosts',array(
@@ -278,7 +278,7 @@ function log_url($url,&$host_id,&$url_id) {
 			));
 			$url_id = null;
 		} else if ($uri!==null) {
-			$url_id = value0('SELECT id FROM log_urls'
+			$url_id = value0('id FROM log_urls'
 			                 .' WHERE host_id='.sql($host_id)
 			                 .' AND uri='.sql($uri));
 		} else {
@@ -303,8 +303,8 @@ function log_request() {
 	if ($_SERVER['HTTP_USER_AGENT']===null || !$_SERVER['HTTP_USER_AGENT']){
 		$user_agent_id = null;
 	} else {
-		$user_agent_id = value0('SELECT id FROM log_user_agents'
-		              .' WHERE name='.sql($_SERVER['HTTP_USER_AGENT']));
+		$user_agent_id = value0('id FROM log_user_agents WHERE name='
+		                        .sql($_SERVER['HTTP_USER_AGENT']));
 		if ($user_agent_id===null) {
 			$user_agent_id = insert('log_user_agents',array(
 				'name'=>$_SERVER['HTTP_USER_AGENT'],

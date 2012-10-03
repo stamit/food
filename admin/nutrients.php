@@ -11,7 +11,7 @@
 <? begin_form('nutrient') ?>
 <table class="fields">
 	<tr><th class="left">Row:</th><td><?=
-		number_input('order',value('SELECT MAX(`order`)+10 FROM nutrient'))
+		number_input('order',value('MAX(`order`)+10 FROM nutrient'))
 	?></td></tr>
 	<tr><th class="left">Column:</th><td><?=
 		number_input('column','')

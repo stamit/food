@@ -3,7 +3,10 @@ require_once 'lib/util.php';
 require_once 'lib/adodb5/adodb.inc.php';
 require_once 'lib/adodb5/adodb-exceptions.inc.php';
 
-# query($sql, $limit=null, $offset=null, $db=null)
+#
+# fetching functons:
+#
+# select($sql, $limit=null, $offset=null, $db=null)
 # value0($sql, $db=null)
 # value1($sql, $db=null)
 # value($sql, $db=null)
@@ -11,64 +14,26 @@ require_once 'lib/adodb5/adodb-exceptions.inc.php';
 # row1($sql, $db=null)
 # row($sql, $db=null)
 # col($sql, $db=null)
+# fetch($tablekeys,$row, $db=null)
 
+#
+# storing functions:
+#
 # execute($sql, $db=null)
 # insert($table, $row, $db=null)
 # update($tablekey, $row, $db=null)
 # delete($tablekey, $row, $db=null)
+# store($tablekeys,$row, $db=null)
 
+#
+# database connections:
+#
+# connect($con,$encoding=null)
 # commit($db=null)
 # rollback($db=null)
 
-# fetch($tablekeys,$row, $db=null)
-# store($tablekeys,$row, $db=null)
 
-$MYSQL_ENCODING_MAPPING = array(
-	'UTF8'=>'utf8',
-	'UTF-8'=>'utf8',
-	'ISO8859-7'=>'greek',
-	'ISO-8859-7'=>'greek',
-);
-
-function map_database_charset($dbtype, $encoding) {
-	global $MYSQL_ENCODING_MAPPING;
-	if (substr($dbtype,0,5)=='mysql') {
-		return ifnull($MYSQL_ENCODING_MAPPING[strtoupper($encoding)],
-		              strtoupper($encoding));
-	} else {
-		return null;
-	}
-}
-
-function connect($con,$encoding=null) {
-	global $ENCODING;
-
-	if (is_string($con)) {
-		$db = ADONewConnection($con);
-		$dbtype = $con;
-	} else {
-		$db = ADONewConnection($con['dbtype']);
-		$db->PConnect($con['dbserver'], $con['dbuser'], $con['dbpass'],
-		              $con['dbname']);
-		$dbtype = $con['dbtype'];
-	}
-
-	if (substr($dbtype,0,5)=='mysql') {
-		$names = map_database_charset($dbtype,ifnull($encoding,
-		                                             $ENCODING));
-		$db->Execute('SET NAMES '.$db->qstr($names));
-	}
-
-	if (substr($dbtype,0,6)=='mysqlt') {
-		$db->BeginTrans();
-	}
-
-	$db->SetFetchMode(ADODB_FETCH_ASSOC);
-
-	return $db;
-}
-
-# general SQL escaping function
+# SQL escaping function
 function sql($x, $db=null) {
 	if ($x === null) {
 		return 'NULL';
@@ -181,19 +146,48 @@ function unsqlid($string) {
 	}
 }
 
-# shorthand query function that returns rows as name=>value arrays 
-# - foreach iterators are not supported here!
-# - only read-only operations should be performed with this function
-function query($sql, $limit=null, $offset=null, $db=null) {
+# generates the text of a "WHERE" clause, after the "WHERE"
+function sql_where_conditions($names,$values,$db,$from=0) {
+	$conditions = array();
+	if (is_array($values)) {
+		for ($i = $from ; $i < count($names) ; ++$i) {
+			$name = $names[$i];
+			if ($i===0) {
+				$table = $name;
+			} else if (array_key_exists($name,$values)) {
+				$conditions[] = sqlid($name).'='.sql($values[$name],$db);
+			} else {
+				throw new Exception('not all key values given');
+			}
+		}
+	} else {
+		if (count($names)!=2)
+			throw new Exception('not enough key values given');
+
+		$conditions[] = sqlid($names[1]).'='.sql($values,$db);
+	}
+	if (!$conditions)
+		throw new Exception('no keys were specified');
+	return implode(' AND ',$conditions);
+}
+
+
+################################################################################
+
+
+# the result of performing SQL query "SELECT $sql" on database $db (or global
+# $DB, if null), from row offset $offset (or beginning, if null) and with
+# maximum number of returned rows $limit (or all rows, if null)
+function select($sql, $limit=null, $offset=null, $db=null) {
 	global $DB; if ($db === null) $db = $DB;
 
 	$results = array();
 	if ($limit!==null) {
-		$set = $db->SelectLimit($sql,
+		$set = $db->SelectLimit('SELECT '.$sql,
 			intval($limit), max(0,intval($offset))
 		);
 	} else {
-		$set = $db->Execute($sql);
+		$set = $db->Execute('SELECT '.$sql);
 	}
 
 	if ($set === FALSE)
@@ -207,11 +201,11 @@ function query($sql, $limit=null, $offset=null, $db=null) {
 	return $results;
 }
 
-# returns the only field of the only row or NULL if there are no resulting rows
+# the only field of the only row or NULL if there are no resulting rows
 function value0($sql, $db=null) {
 	global $DB; if ($db === null) $db = $DB;
 
-	$results = query($sql, 2, 0, $db);
+	$results = select($sql, 2, 0, $db);
 	if (count($results) > 1)
 		throw new LoggedException("query gives more than one result: ".$sql);
 	if (!count($results))
@@ -228,7 +222,7 @@ function value0($sql, $db=null) {
 	return null;
 }
 
-# returns the only field of the first row
+# the only field of the first row
 function value1($sql, $db=null) {
 	global $DB; if ($db === null) $db = $DB;
 
@@ -242,12 +236,9 @@ function value1($sql, $db=null) {
 	return null;
 }
 
-# returns the single field of the single resulting row
+# the single field of the single resulting row
 function value($sql,$db=null) {
 	global $DB; if ($db === null) $db = $DB;
-
-	if (strtoupper(substr($sql,0,7))!='SELECT ')
-		$sql = 'SELECT '.$sql;
 
 	$x = row($sql,$db);
 	if (count($x) < 1)
@@ -258,31 +249,31 @@ function value($sql,$db=null) {
 	return $y;
 }
 
-# returns the only row or NULL (expects at most one row)
+# the only row or NULL (expects at most one row)
 function row0($sql, $db=null) {
 	global $DB; if ($db === null) $db = $DB;
 
-	$results = query($sql, 2, 0, $db);
+	$results = select($sql, 2, 0, $db);
 	if (count($results) > 1)
 		throw new LoggedException("query gives more than one result: ".$sql);
 	return (count($results)>0) ? $results[0] : null;
 }
 
-# returns the first row
+# the first row of possibly many rows
 function row1($sql, $db=null) {
 	global $DB; if ($db === null) $db = $DB;
 
-	$results = query($sql, 1, 0, $db);
+	$results = select($sql, 1, 0, $db);
 	if (!count($results))
 		throw new LoggedException("query gives no results: ".$sql);
 	return $results[0];
 }
 
-# returns the single resulting row
+# the single resulting row
 function row($sql,$db=null) {
 	global $DB; if ($db === null) $db = $DB;
 
-	$results = query($sql, 2, 0, $db);
+	$results = select($sql, 2, 0, $db);
 	if (!count($results))
 		throw new LoggedException("query gives no results: ".$sql);
 	if (count($results) > 1)
@@ -290,11 +281,11 @@ function row($sql,$db=null) {
 	return $results[0];
 }
 
-# returns array with the only value of each of the zero or more rows returned by query $sql
+# an array with the only value of each of the zero or more rows returned by query $sql
 function col($sql, $db=null) {
 	global $DB; if ($db === null) $db = $DB;
 
-	$xs = query($sql,null,null,$db);
+	$xs = select($sql,null,null,$db);
 	for ($i = 0 ; $i < count($xs) ; ++$i) {
 		$row = $xs[$i];
 		if (count($row) < 1)
@@ -306,31 +297,23 @@ function col($sql, $db=null) {
 	return $xs;
 }
 
-################################################################################
+# the row from table.keyfield $tablekey which has key with value $id
+function fetch($tablekey,$id,$db=null) {
+	global $DB; if ($db === null) $db = $DB;
 
-function sql_where_conditions($names,$values,$db,$from=0) {
-	$conditions = array();
-	if (is_array($values)) {
-		for ($i = $from ; $i < count($names) ; ++$i) {
-			$name = $names[$i];
-			if ($i===0) {
-				$table = $name;
-			} else {
-				$conditions[] = sqlid($name).'='.sql($values[$name],$db);
-			}
-		}
-	} else {
-		if (count($names)!=2)
-			throw new Exception('not enough values given');
+	$words = explode('.',$tablekey);
+	$table = $words[0];
 
-		$conditions[] = sqlid($names[1]).'='.sql($values,$db);
-	}
-	if (!$conditions)
-		throw new Exception('no keys specified in update('.repr($tablekeys).','.repr($values).')');
-	return implode(' AND ',$conditions);
+	return ($id !== null)
+		? row0('* FROM '.sqlid($table)
+		       .' WHERE '.sql_where_conditions($words,$id,$db,1))
+		: null
+	;
 }
 
+################################################################################
 
+# number of rows affected by running query $sql on the database $db or on the global database $DB
 function execute($sql, $db=null) {
 	global $DB; if ($db === null) $db = $DB;
 
@@ -341,11 +324,14 @@ function execute($sql, $db=null) {
 	return $db->Affected_Rows();
 }
 
-# returns the ID field of the newly INSERTed row
-# - $id_field is unquoted SQL identifier
-# - $row is indexed by unquoted SQL identifiers
-function insert($table, $row, $db=null) {
+# id of the row inserted into table $table based on $row
+function insert($tablekeys, $row, $db=null) {
 	global $DB; if ($db === null) $db = $DB;
+
+	$words = explode('.',$tablekeys);
+	$table = $words[0];
+
+	# FIXME what does ADODB return in the case of multiple key fields?
 
 	$fields = array();
 	$values = array();
@@ -363,15 +349,15 @@ function insert($table, $row, $db=null) {
 	return $db->Insert_ID();
 }
 
-# $row must contain a field named $id_field, and only the fields that are to be modified
-# - $id_field is unquoted SQL identifier
-# - $row is indexed by unquoted SQL identifiers
+# Update the table.keyfields $tablekeys row identified by (and as described by) $row .
+# - array $row contains values for all key fields as well as update data
 function update($tablekeys, $row, $db=null) {
 	global $DB; if ($db === null) $db = $DB;
 
 	$words = explode('.',$tablekeys);
 	$table = $words[0];
-	if ($table === null) throw new Exception('no table specified');
+	if ($table === null)
+		throw new Exception('no table specified');
 
 	$assignments = array();
 	foreach ($row as $field=>$value) if ($field!=$id_field) {
@@ -383,29 +369,111 @@ function update($tablekeys, $row, $db=null) {
 	       .' SET '.implode(',',$assignments)
 	       .' WHERE '.sql_where_conditions($words,$row,$db,1);
 
-	return execute($sql,$db);
+	execute($sql,$db);
 }
 
-# deletes a record by ID
-# - $id_field is unquoted SQL identifier
-# - if $row_or_id is an array, is is indexed by unquoted SQL identifiers
-# - if $row_or_id is not an array, it is the row's ID
+# Delete the table.keyfields $tablekeys row identified by $row .
+# - array $row contains values for all key fields
 function delete($tablekeys, $row, $db=null) {
 	global $DB; if ($db === null) $db = $DB;
 
 	$words = explode('.',$tablekeys);
 	$table = $words[0];
-	if ($table === null) throw new Exception('no table specified');
+	if ($table === null)
+		throw new Exception('no table specified');
 
 	$sql = 'DELETE FROM '.sqlid($table)
 	       .' WHERE '.sql_where_conditions($words,$row,$db,1);
 
-	return execute($sql,$db);
+	execute($sql,$db);
+}
+
+# works with the result of `given', after validation and possible corrections
+# by you
+function store($tablekeys, $row, $db=null) {
+	global $DB; if ($db === null) $db = $DB;
+	global $REQUEST_ID;
+
+	$words = explode('.',$tablekeys);
+	$table = $words[0];
+
+	if ( count($words)==1 ) {
+		$id = insert($table, $row, $db);
+
+	} else if ( count($words)==2 ) {
+		$key = $words[1];
+		if ( ! $row[$key] ) {
+			$id = insert($table, $row, $db);
+		} else if ( $row[$key] > 0) {
+			$id = $row[$key];
+			update($table.'.'.$key, $row, $db);
+		} else {
+			$id = -$row[$key];
+			delete($table.'.'.$key, $id, $db);
+		}
+	} else {
+		throw new Exception('not implemented');
+	}
+
+	insert('log_database',array(
+		'request_id'=>$REQUEST_ID,
+		'user_id'=>$_SESSION['user_id'],
+		'table'=>$table,
+		'table_id'=>abs($id),
+		'changes'=>js($row),
+	),$db);
+
+	return $id;
 }
 
 
 ################################################################################
 
+
+$MYSQL_ENCODING_MAPPING = array(
+	'UTF8'=>'utf8',
+	'UTF-8'=>'utf8',
+	'ISO8859-7'=>'greek',
+	'ISO-8859-7'=>'greek',
+);
+
+function map_database_charset($dbtype, $encoding) {
+	global $MYSQL_ENCODING_MAPPING;
+	if (substr($dbtype,0,5)=='mysql') {
+		return ifnull($MYSQL_ENCODING_MAPPING[strtoupper($encoding)],
+		              strtoupper($encoding));
+	} else {
+		return null;
+	}
+}
+
+function connect($con,$encoding=null) {
+	global $ENCODING;
+
+	if (is_string($con)) {
+		$db = ADONewConnection($con);
+		$dbtype = $con;
+	} else {
+		$db = ADONewConnection($con['dbtype']);
+		$db->PConnect($con['dbserver'], $con['dbuser'], $con['dbpass'],
+		              $con['dbname']);
+		$dbtype = $con['dbtype'];
+	}
+
+	if (substr($dbtype,0,5)=='mysql') {
+		$names = map_database_charset($dbtype,ifnull($encoding,
+		                                             $ENCODING));
+		$db->Execute('SET NAMES '.$db->qstr($names));
+	}
+
+	if (substr($dbtype,0,6)=='mysqlt') {
+		$db->BeginTrans();
+	}
+
+	$db->SetFetchMode(ADODB_FETCH_ASSOC);
+
+	return $db;
+}
 
 function commit($db=null) {
 	global $DB; if ($db === null) $db = $DB;
@@ -571,58 +639,6 @@ function given_field($field_name,$table_name) {
 	if ($value === null) $value = post($field_name);
 	if ($value === null && $table_name!==null) $value = post($table_name.'_'.$field_name);  # FIXME ?
 	return $value;
-}
-
-# fetches a row
-function fetch($tablekey,$id,$db=null) {
-	global $DB; if ($db === null) $db = $DB;
-
-	$words = explode('.',$tablekey);
-	$table = $words[0];
-
-	return ($id !== null)
-		? row0('SELECT * FROM '.sqlid($table)
-		       .' WHERE '.sql_where_conditions($words,$id,$db,1))
-		: null
-	;
-}
-
-# works with the result of `input', after validation and possible corrections
-# by you
-function store($tablekeys, $row, $db=null) {
-	global $DB; if ($db === null) $db = $DB;
-	global $REQUEST_ID;
-
-	$words = explode('.',$tablekeys);
-	$table = $words[0];
-
-	if ( count($words)==1 ) {
-		$id = insert($table, $row, $db);
-
-	} else if ( count($words)==2 ) {
-		$key = $words[1];
-		if ( ! $row[$key] ) {
-			$id = insert($table, $row, $db);
-		} else if ( $row[$key] > 0) {
-			$id = $row[$key];
-			update($table.'.'.$key, $row, $db);
-		} else {
-			$id = -$row[$key];
-			delete($table.'.'.$key, $id, $db);
-		}
-	} else {
-		throw new Exception('not implemented');
-	}
-
-	insert('log_database',array(
-		'request_id'=>$REQUEST_ID,
-		'user_id'=>$_SESSION['user_id'],
-		'table'=>$table,
-		'table_id'=>abs($id),
-		'changes'=>js($row),
-	),$db);
-
-	return $id;
 }
 
 ?>
