@@ -2,7 +2,6 @@
 	require_once 'app/init.php';
 
 	$HEADING = 'Persons';
-	$BREAD = array($URL=>'home');
 ?>
 <? include 'app/begin.php' ?>
 <? include 'persons-table.php' ?>

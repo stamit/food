@@ -3,7 +3,6 @@
 	require_once 'lib/regional.php';
 
 	$HEADING = 'Item purchases';
-	$BREAD = array($URL=>'home');
 	$prodid = (v('prodid')!==null ? intval(v('prodid')) : null);
 ?>
 <? include 'app/begin.php' ?>

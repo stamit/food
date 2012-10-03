@@ -84,7 +84,6 @@
 	} else {
 		$HEADING = 'New person';
 	}
-	$BREAD = array($URL=>'home', 'persons'=>'person');
 ?>
 <? include 'app/begin.php' ?>
 

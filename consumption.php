@@ -55,7 +55,6 @@
 	} else {
 		$HEADING = 'New consumption';
 	}
-	$BREAD = array($URL=>'home', 'consumptions'=>'consumption history');
 ?>
 <?php include 'app/begin.php' ?>
 

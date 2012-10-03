@@ -886,13 +886,13 @@ function urljoin($absolute, $relative) {
 
 # push/pop global state variables onto/from stack to allow for a tree structure
 function push($get=null, $post=null) {
-	global $STACK,$ID,$ID2,$HEAD,$ICON,$BREAD;
+	global $STACK,$ID,$ID2,$HEAD,$ICON;
 
 	if ($STACK===null) {
 		$STACK = array(array(0));
 	}
 
-	$STACKITEM = array(0,$ID,$HEAD,$ICON,$BREAD,'get'=>$_GET,'post'=>$_POST);
+	$STACKITEM = array(0,$ID,$HEAD,$ICON,'get'=>$_GET,'post'=>$_POST);
 
 	if (count($STACK) > 0) {
 		if ($ID2!==null) {
@@ -905,7 +905,6 @@ function push($get=null, $post=null) {
 	}
 	$HEAD = null;
 	$ICON = null;
-	$BREAD = null;
 	if (count($STACK) > 0) {
 		$_GET = $_GET['__'.$STACK[count($STACK)-1][0]];
 		if (is_string($_GET)) $_GET = jsdecode($_GET);
@@ -925,7 +924,7 @@ function push($get=null, $post=null) {
 	array_push($STACK, $STACKITEM);
 }
 function pop() {
-	global $ID,$HEAD,$ICON,$BREAD,$STACK;
+	global $ID,$HEAD,$ICON,$STACK;
 
 	$oldprefix = $ID;
 
@@ -933,7 +932,6 @@ function pop() {
 	$ID = $STACKITEM[1];
 	$HEAD = $STACKITEM[2];
 	$ICON = $STACKITEM[3];
-	$BREAD = $STACKITEM[4];
 	$_GET = $STACKITEM['get'];
 	$_POST = $STACKITEM['post'];
 

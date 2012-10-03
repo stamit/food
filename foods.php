@@ -3,7 +3,6 @@
 	require_once 'app/data.php';
 
 	$HEADING = 'Foods';
-	$BREAD = array($URL=>'home');
 ?>
 <? include 'app/begin.php' ?>
 <? include 'foods-table.php' ?>

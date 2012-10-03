@@ -3,7 +3,6 @@
 	require_once 'app/data.php';
 
 	$HEADING = 'Stores';
-	$BREAD = array($URL=>'home');
 ?>
 <? include 'app/begin.php' ?>
 <? include 'stores-table.php' ?>

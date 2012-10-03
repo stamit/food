@@ -111,7 +111,6 @@
 		$row = null;
 		$HEADING = 'New receipt';
 	}
-	$BREAD = array($URL=>'home', 'receipts'=>'receipts');
 ?>
 <? include 'app/begin.php' ?>
 

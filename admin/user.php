@@ -60,7 +60,6 @@
 	} else {
 		$HEADING = 'New user';
 	}
-	$BREAD = array($URL=>'home', 'admin'=>'admin');
 ?>
 <? include 'app/begin.php' ?>
 

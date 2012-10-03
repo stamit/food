@@ -54,7 +54,6 @@
 	} else {
 		$HEADING = 'New store';
 	}
-	$BREAD = array($URL=>'home', 'stores'=>'stores');
 ?>
 <? include 'app/begin.php' ?>
 

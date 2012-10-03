@@ -2,7 +2,6 @@
 	require_once 'app/init.php';
 
 	$HEADING = 'Nutrients';
-	$BREAD = array($URL=>'home');
 ?>
 <? include 'app/begin.php' ?>
 <? $mtid = include 'nutrients-table.php' ?>

@@ -3,7 +3,6 @@
 	require_once 'lib/regional.php';
 
 	$HEADING = 'Consumption history';
-	$BREAD = array($URL=>'home');
 ?>
 
 <? include 'app/begin.php' ?>

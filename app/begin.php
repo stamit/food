@@ -114,18 +114,6 @@ if ( $DEPTH <= 0 && !$INLINE_REQUEST ) {
 		unset($_SESSION['alert']);
 	}
 
-	/*if ($BREAD) {
-		echo '<div class="breadcrumbs">';
-		$i = 0;
-		foreach ($BREAD as $page => $name) {
-			if ($i) echo '&nbsp;&raquo;&nbsp;';
-			echo '<a href="'.html($page).'">'.html_stiff($name).'</a>';
-			++$i;
-		}
-		unset($i);
-		echo '</div>';
-	}*/
-
 	if ($HEADING) {
 		if ($POPUP !== null) {
 			/*echo '<div style="float:right">'

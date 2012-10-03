@@ -255,12 +255,6 @@
 		$HEADING .= ' (miscellaneous)';
 	}
 
-	if ($row['type']==1) {
-		$BREAD = array($URL=>'home', 'foods'=>'foods');
-	} else {
-		$BREAD = array($URL=>'home', 'products'=>'products');
-	}
-
 	if ($row['store_duration']!==null && $row['store_duration']!=='') {
 		$row['store_duration_months'] =
 			intval($row['store_duration']/30);
