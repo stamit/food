@@ -3,27 +3,25 @@ require_once 'lib/util.php';
 require_once 'lib/adodb5/adodb.inc.php';
 require_once 'lib/adodb5/adodb-exceptions.inc.php';
 
-# function query($sql, $limit=null, $offset=null, $db=null)
-# function value0($sql, $db=null)
-# function value1($sql, $db=null)
-# function value($sql,$db=null)
-# function row0($sql, $db=null)
-# function row1($sql, $db=null)
-# function row($sql,$db=null)
-# function col($sql, $db=null)
-# function get_tables($db=null)
-# function get_fields($table, $db=null)
+# query($sql, $limit=null, $offset=null, $db=null)
+# value0($sql, $db=null)
+# value1($sql, $db=null)
+# value($sql, $db=null)
+# row0($sql, $db=null)
+# row1($sql, $db=null)
+# row($sql, $db=null)
+# col($sql, $db=null)
 
-# function execute($sql, $db=null)
-# function insert($table, $row, $db=null)
-# function update($tablekey, $row, $db=null)
-# function delete($tablekey, $row, $db=null)
+# execute($sql, $db=null)
+# insert($table, $row, $db=null)
+# update($tablekey, $row, $db=null)
+# delete($tablekey, $row, $db=null)
 
-# function commit($db=null)
-# function rollback($db=null)
+# commit($db=null)
+# rollback($db=null)
 
-# function fetch($tablekeys,$row, $db=null)
-# function store($tablekeys,$row, $db=null)
+# fetch($tablekeys,$row, $db=null)
+# store($tablekeys,$row, $db=null)
 
 $MYSQL_ENCODING_MAPPING = array(
 	'UTF8'=>'utf8',
@@ -307,33 +305,6 @@ function col($sql, $db=null) {
 	}
 	return $xs;
 }
-
-
-function get_tables($db=null) {
-	global $DB; if ($db === null) $db = $DB;
-
-	$y = array();
-	foreach (query('SHOW TABLES',null,null,$db) as $table) {
-		$keys = array_keys($table);
-		$y[] = array('name'=>$table[$keys[0]]);
-	}
-	return $y;
-}
-
-function get_fields($table, $db=null) {
-	global $DB; if ($db === null) $db = $DB;
-
-	$table = sqlid($table);
-	$fields = array();
-	foreach (query('SHOW COLUMNS FROM '.$table,null,null,$db) as $col) {
-		$fields[] = array(
-			'name'=>$col['Field'],
-			'type'=>$col['Type']
-		);
-	}
-	return $fields;
-}
-
 
 ################################################################################
 
