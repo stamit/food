@@ -58,7 +58,7 @@ function my_exception_handler($exception) {
 }
 set_exception_handler('my_exception_handler');
 
-error_reporting(E_ERROR);
+error_reporting(E_ERROR | E_PARSE);
 
 if ($CONTENT_TYPE === null) $CONTENT_TYPE = 'text/html';
 if ($DEFAULT_ENCODING === null) $DEFAULT_ENCODING = 'UTF-8';
