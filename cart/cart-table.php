@@ -1,6 +1,6 @@
 <? $AUTH=true;
 	require_once 'app/init.php';
-	require_once 'lib/maketable/fun.php';
+	require_once 'lib/maketable/maketable.php';
 
 	if ($cart===null) $cart = fetch(
 		'cart.id',

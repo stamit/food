@@ -81,8 +81,14 @@
 	}
 
 	if ($row['id']>0) {
-		$row = row('* FROM person WHERE id='.sql($row['id']));
-		$HEADING = 'Person '.html($row['name']);
+		$RO = ($row['id'][0]!='+');
+		$row = fetch('person.id',$row);
+		if (!$row) {
+			$STATUS = 404;
+			$HEADING = 'Person not found';
+		} else {
+			$HEADING = 'Person '.html($row['name']);
+		}
 	} else {
 		$HEADING = 'New person';
 	}
@@ -92,23 +98,19 @@
 <? begin_form() ?>
 <table class="fields">
 <? if (has_right('admin')) { ?>
-	<tr><th>USER ID:</th><td><?=number_input('user_id',$row)?></td></tr>
+	<tr><th>USER ID:</th><td><?=number_input('user_id',$row,null,$RO)?></td></tr>
 <? } ?>
-	<tr><th>Name Sn:</th><td><?=input('name',$row,array(48,64))?></td></tr>
-	<tr><th>Address:</th><td><?=textarea('address',$row,48,3)?></td></tr>
-	<tr><th>Zip code:</th><td><?=input('postcode',$row,6)?></td></tr>
-	<tr><th>P.O. box:</th><td><?=input('postbox',$row,6)?></td></tr>
-	<tr><th>Phone:</th><td><?=input('phone',$row,16)?></td></tr>
-	<tr><th>Phone:</th><td><?=input('phone2',$row,16)?></td></tr>
-	<tr><th>FAX:</th><td><?=input('fax',$row,16)?></td></tr>
-	<tr><th>Email:</th><td><?=input('email',$row,array(24,127))?></td></tr>
-	<tr><th>Website:</th><td><?=input('website',$row,array(32,127))?></td></tr>
-<?/*
-	<tr><th>ΑΦΜ:</th><td><?=input('afm',$row,9)?></td></tr>
-	<tr><th>ΔΟΥ:</th><td><?=input('doy',$row,array(24,48))?></td></tr>
-*/?>
+	<tr><th>Name Sn:</th><td><?=input('name',$row,array(48,64),$RO)?></td></tr>
+	<tr><th>Address:</th><td><?=textarea('address',$row,48,3,$RO)?></td></tr>
+	<tr><th>Zip code:</th><td><?=input('postcode',$row,6,$RO)?></td></tr>
+	<tr><th>P.O. box:</th><td><?=input('postbox',$row,6,$RO)?></td></tr>
+	<tr><th>Phone:</th><td><?=input('phone',$row,16,$RO)?></td></tr>
+	<tr><th>Phone:</th><td><?=input('phone2',$row,16,$RO)?></td></tr>
+	<tr><th>FAX:</th><td><?=input('fax',$row,16,$RO)?></td></tr>
+	<tr><th>Email:</th><td><?=input('email',$row,array(24,127),$RO)?></td></tr>
+	<tr><th>Website:</th><td><?=input('website',$row,array(32,127),$RO)?></td></tr>
 	<? if (!$OPTION) { ?>
-	<tr><th>Notes:</th><td><?=textarea('notes',$row,64,10)?></td></tr>
+	<tr><th>Notes:</th><td><?=textarea('notes',$row,64,10,$RO)?></td></tr>
 	<? } ?>
 
 <? if (has_right('register-persons')) { ?>

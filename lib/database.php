@@ -156,6 +156,8 @@ function sql_where_conditions($names,$values,$db,$from=0) {
 				$table = $name;
 			} else if (array_key_exists($name,$values)) {
 				$conditions[] = sqlid($name).'='.sql($values[$name],$db);
+			} else if ($from==1 && array_key_exists($names[0].'.'.$name,$values)) {
+				$conditions[] = sqlid($name).'='.sql($values[$names[0].'.'.$name],$db);
 			} else {
 				throw new Exception('not all key values given');
 			}

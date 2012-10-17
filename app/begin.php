@@ -3,6 +3,9 @@ require_once 'app/init.php';
 require_once 'lib/util.php';
 
 if (!headers_sent()) {
+	if ($STATUS!==null) {
+		header(':', true, $STATUS);
+	}
 	header('Content-type: '.$CONTENT_TYPE.($ENCODING ? '; charset='.$ENCODING : ''));
 	if ( ! $CACHE ) {
 		header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1

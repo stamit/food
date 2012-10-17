@@ -182,17 +182,21 @@ function failure($msg=null) {
 	rollback();
 
 	if ($msg!==null) {
-		if ($msg instanceof Exception)
-			$msg = 'The action failed because '.$msg->getMessage().'.';
-		if ($msg!=='')
-			mistake($msg);
+		if ($msg instanceof Exception) {
+			$msg = $msg->getMessage();
+			if ($msg!=='')
+				mistake('The action failed because '.$msg.'.');
+		} else {
+			if ($msg!=='')
+				mistake($msg);
+		}
 	}
 
 	if ($INLINE_REQUEST>=2) {
 		# included script
 		return true;
 	} else if ($INLINE_REQUEST) {
-		header(' ', true, 402);  # "payment required"
+		header(':', true, 402);  # "payment required"
 		header('Content-type: text/javascript'.($ENCODING ? '; charset='.$ENCODING : ''));
 		$mist=array();
 		foreach ($MISTAKES as $a=>$b)

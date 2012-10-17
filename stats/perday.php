@@ -1,7 +1,7 @@
 <? $AUTH='consumption';
 	require_once 'app/init.php';
 	require_once 'app/data.php';
-	require_once 'lib/maketable/fun.php';
+	require_once 'lib/maketable/maketable.php';
 
 	include 'app/begin.php';
 	maketable(array(
