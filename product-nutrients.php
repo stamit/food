@@ -2,13 +2,13 @@
 	require_once 'app/init.php';
 
 	$proto = array(
-		'sample_weight'=>array(0.0,''=>null),
-		'sample_volume'=>array(0.0,''=>null),
-		'refuse_weight'=>array(0.0,''=>null),
-		'refuse_volume'=>array(0.0,''=>null),
+		'sample_weight'=>'float',
+		'sample_volume'=>'float',
+		'refuse_weight'=>'float',
+		'refuse_volume'=>'float',
 	);
 	foreach (col('name FROM nutrient WHERE basetable') as $name)
-		$proto[$name] = array(0.0,''=>null);
+		$proto[$name] = 'float';
 	$row = given('product.id', $proto);
 
 	$old = fetch('product.id', $row);
@@ -59,8 +59,7 @@
 				if ($nut['basetable']) {
 					$product[$nut['name']] = $value;
 				}
-				product_nutrient_on_change($prodid,$nut['id'],
-							       $value);
+				product_nutrient_on_change($prodid,$nut['id'],$value);
 			}
 		}
 

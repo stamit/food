@@ -500,22 +500,7 @@ function rollback($db=null) {
 ################################################################################
 
 
-#
-# return a record which is created from user-supplied data, and is prepared for
-# INSERTing, UPDATEing or DELETEing with store()
-#
-# - suppose postdata is "a=123" ( no 'key' field, meaning INSERT )
-#     (array('a'=>1.23, 'b'=>'foo'),'key')
-#         => array('a'=>123.0)
-#
-# - suppose postdata is "key=9999&a=123" ( positive 'key' field, meaning UPDATE )
-#     (array('a'=>1.23, 'b'=>'foo'),'key')
-#         => array('key'=>9999, 'a'=>123.0)
-#
-# - suppose postdata is "key=-9999&a=123" ( negative 'key' field, meaning DELETE )
-#     (array('a'=>1.23, 'b'=>'foo'),'key')
-#         => array('key'=>-9999)
-#
+# record which is created from GET and POST data (POST has precedence)
 function given($a, $b, $ins_defaults=false) {
 	if (is_array($a)) {
 		$prototype = $a;
@@ -525,118 +510,128 @@ function given($a, $b, $ins_defaults=false) {
 	}
 
 	if (is_string($a)) {
-		$i = strpos($a,'.');
-		if ($i===false) {
-			$table_name=$a;
-			$id_field=null;
+		$words = explode('.',$a);
+		if (count($words)) {
+			$tablename = $words[0];
+			for ($i = 1 ; $i < count($words) ; ++$i) {
+				if (!array_key_exists($words[$i],$prototype)) {
+					$prototype[] = $words[$i];
+				}
+			}
 		} else {
-			$table_name=substr($a,0,$i);
-			$id_field=substr($a,$i+1);
+			$tablename = null;
 		}
-	} else {
-		$table_name=null;
-		$id_field=null;
 	}
 
 	$record = array();
-	if ($id_field !== null) {
-		$id = given_field($id_field,$table_name);
-		if ($id > 0) {
-			$record[$id_field] = $id;
-			$do_put_defaults = false;
-		} else if ($id == 0) {
-			$do_put_defaults = $ins_defaults;
-		} else {
-			return array($id_field=>$id);
-		}
-	}
-	foreach ($prototype as $field => $decl) {
-		#
-		# 'foo' => def,
-		#     all values are converted to type of `def'
-		#     unset if they cannot be converted
-		#
-		# 'foo' => array('str1'=>value1, 'str2'=>value2, ...),
-		#     other values unset
-		#     YOU WILL HAVE TO PREFIX ANY INTEGER VALUES WITH '0'
-		#         (so they are suitable as array keys)
-		#
-		# 'foo' => array(def, 'str1'=>value1, 'str2'=>value2, ...),
-		#     other values are converted to type of `def'
-		#     unset if they cannot be converted
-		#
-		# 'foo' => array(def,other, 'str1'=>value1, 'str2'=>value2, ...),
-		#     if `other' is true, other values become `def'
-		#      otherwise converted to type of `def'
-		#
-		# 'foo' => array(def,other,unset, 'str1'=>value1, 'str2'=>value2, ...),
-		#     specific values (mapped to type of `def')
-		#     if `other' is true, other values become `def'
-		#      otherwise converted to type of `def'
-		#     if `unset' is true, unset values become `def'
-		#      otherwise they remain unset
-		#
+	foreach ($prototype as $a => $b) {
+		if (!is_string($a)) {
+			$fieldname = $b;
+			$x = given_field($fieldname,$tablename);
+			if ($x!==null) {
+				$record[$fieldname] = $x;
+			}
 
-		$x = given_field($field,$table_name);
-		if (!is_array($decl)) {
-			$type = $decl;
 		} else {
-			if ($x===null) {
-				if ($decl[2]) {
-					$x = $decl[0];
-					$type = null;
+			$fieldname = $a;
+			$fun = $b;
+			$x = given_field($fieldname,$tablename);
+
+			switch (gettype($fun)) {
+			case 'array':
+				#
+				# numbers and strings starting with digits are to be prefixed with an extra '0' in mapping
+				#
+				if ( is_int($x) || (is_string($x) && strval(intval($x[0]))==$x[0]) ) {
+					$xx = '0'.strval($x);
 				} else {
-					continue;
+					$xx = strval($x);
 				}
 
-			} else {
-				# XXX  I hate this in PHP!  XXX
-				if (strval(intval($x)) === strval($x))
-					$y = '0'.$x;
-				else
-					$y = $x;
-
-				if (array_key_exists($y,$decl)) {
-					$x = $decl[$y];
-					$type = null;
-	
-				} else if ($decl[1]) {
-					$x = $decl[0];
-					$type = null;
-	
-				} else if (array_key_exists(0,$decl)) {
-					$type = $decl[0];
-	
+				if (array_key_exists($xx,$fun)) {
+					$record[$fieldname] = $fun[$xx];
+					$fun = null;
 				} else {
-					continue;
+					#
+					# construct arguments for function call
+					# $x is inserted exactly once
+					#
+					$args = array();
+					$i = 1;
+					while (array_key_exists($i,$fun)) {
+						$args[] = $fun[$i];
+						++$i;
+					}
+					$args[] = $x;
+					++$i;
+					while (array_key_exists($i,$fun)) {
+						$args[] = $fun[$i];
+						++$i;
+					}
+
+					error_log(repr($fun).' '.repr($xx).' '.repr($args));
+
+					if (count($args)>1) {
+						$record[$fieldname] = call_user_func_array($fun[0], $args);
+						$fun = null;
+					} else {
+						$fun = $fun[0];
+					}
+				}
+				break;
+			case 'string':
+				break;
+			default:
+				$fun = gettype($fun);
+			}
+
+			switch ($fun) {
+			case null:  # ignore field
+				break;
+
+			case 'bool': case 'boolean':
+				if ($x===null) {  # XXX what else can be done here?
+					$x = (given_field($fieldname.'___OFF__',$tablename)!==null)?'0':null;
+				}
+				if ($x!==null) {
+					$x = trim($x);
+					$record[$fieldname] = ($x!=0) ? true : false;
+				}
+				break;
+			case 'int': case 'integer':
+				if ($x!==null) {
+					$x = trim($x);
+					if ($x!=='') {
+						$record[$fieldname] = intval($x);
+					}
+				}
+				break;
+			case 'double': case 'float': case 'real':
+				if ($x!==null) {
+					$x = trim($x);
+					if ($x!=='') {  # XXX user's locale settings?
+						$record[$fieldname] = floatval(str_replace(',','.',$x));
+					}
+				}
+				break;
+			case '': case 'str': case 'string':
+				if ($x!==null) {
+					$record[$fieldname] = strval($x);
+				}
+				break;
+			case 'str1':
+				if ($x!==null) {
+					$record[$fieldname] = ($x!=='') ? strval($x) : null;
+				}
+				break;
+			default:
+				if ($x!==null) {
+					$record[$fieldname] = $fun($x);
 				}
 			}
 		}
-
-		switch (gettype($type)) {
-		case 'boolean':
-			if ($x===null) {
-				$x = given_field($field.'___OFF__',$table_name);
-			}
-			if (trim($x)!=='')
-				$record[$field] = intval($x) ? 1 : 0;
-			break;
-		case 'int': case 'integer':
-			if (trim($x)!=='')
-				$record[$field] = intval($x);
-			break;
-		case 'double': case 'float': case 'real':
-			if (trim($x)!=='')
-				$record[$field] = floatval(str_replace(',','.',$x));
-			break;
-		case 'string':
-			$record[$field] = strval($x);
-			break;
-		case 'NULL':
-			$record[$field] = $x;
-			break;
-		}
 	}
+
 	return $record;
 }
 

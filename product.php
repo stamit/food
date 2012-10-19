@@ -2,29 +2,29 @@
 	require_once 'app/init.php';
 
 	$row = given('product.id', array(
-		'maker'=>array(0,''=>null),
-		'packager'=>array(0,''=>null),
-		'importer'=>array(0,''=>null),
-		'distributor'=>array(0,''=>null),
-		'parent'=>array(0,''=>null),
-		'name'=>array('',''=>null),
-		'type'=>array(0,''=>null),
-		'barcode'=>array('',''=>null),
-		'typical_price'=>array('',''=>null),
-		'price_to_parent'=>false,
-		'price_no_children'=>false,
-		'price_no_recalc'=>false,
-		'typical_units'=>array('',''=>null),
-		'units_avoid_filling'=>false,
-		'units_near_kg'=>false,
-		'ingredients'=>array('',''=>null),
-		'store_duration'=>array(0.0,''=>null),
-		'store_temp_min'=>array(0.0,''=>null),
-		'store_temp_max'=>array(0.0,''=>null),
-		'packaging_weight'=>array(0.0,''=>null),
-		'glaze_weight'=>array(0.0,''=>null),
-		'net_weight'=>array(0.0,''=>null),
-		'net_volume'=>array(0.0,''=>null),
+		'maker'=>'int',
+		'packager'=>'int',
+		'importer'=>'int',
+		'distributor'=>'int',
+		'parent'=>'int',
+		'name'=>'str',
+		'type'=>'int',
+		'barcode'=>'str1',
+		'typical_price'=>'float',
+		'price_to_parent'=>'bool',
+		'price_no_children'=>'bool',
+		'price_no_recalc'=>'bool',
+		'typical_units'=>'str1',
+		'units_avoid_filling'=>'bool',
+		'units_near_kg'=>'bool',
+		'ingredients'=>'str1',
+		'store_duration'=>'float',
+		'store_temp_min'=>'float',
+		'store_temp_max'=>'float',
+		'packaging_weight'=>'float',
+		'glaze_weight'=>'float',
+		'net_weight'=>'float',
+		'net_volume'=>'float',
 	));
 
 	//
@@ -52,7 +52,7 @@
 		}
 	}
 
-	$old = fetch('product.id', $row['id']);
+	$old = fetch('product.id', abs($row['id']));
 	$own_record = ($row['id']===null) ||
 	              ( $old['user_id']!==null
 	                && $old['user_id']==$_SESSION['user_id'] ) || 
@@ -141,8 +141,14 @@
 		}
 
 		if (correct()) {
+			if ($row['id']<0 && $old['parent']!==null) {
+				$addit = '&parent='.urlencode($old['parent']);
+			} else {
+				$addit = '';
+			}
+
 			$row['id'] = store('product.id',$row);
-			if (success('?id='.urlencode($row['id']))) return true;
+			if (success('?id='.urlencode($row['id']).$addit)) return true;
 		}
 	} catch (Exception $x) {
 		if (failure($x)) return false;
@@ -164,15 +170,16 @@
 		$row = fetch('product.id',$row);
 		if ($row) {
 			$owner = row0('* FROM person WHERE id='.sql($row['owner']));
-			$HEADING = html($row['name'])
+			$HEADING = 'Product '.html($row['name'])
 			           .($owner ? ' ('.$owner['name'].')' : '');
 			$RO = ($MODE[0]!='+');
 		} else {
 			$STATUS = 404;
-			$HEADING = 'Person does not exist';
+			$HEADING = 'Product does not exist';
 			$RO = -1;
 		}
 	} else {
+		$parent = $row['parent'];
 		$row = fetch('product.id',-$row['id']);
 		if ($row) {
 			$HEADING = 'Delete '.$type.' '.html($row['name']).'?';
@@ -180,6 +187,9 @@
 		} else {
 			$HEADING = 'Product deleted';
 			$RO = -1;
+			if ($parent!==null) {
+				$HEADING .= ' - <a href="?'.html('id='.urlencode($parent)).'">Parent: '.html(value0('name FROM product WHERE id='.sql($parent))).'</a>';
+			}
 		}
 	}
 
@@ -204,11 +214,37 @@
 	}
 ?>
 <? include 'app/begin.php' ?>
-<? include_script('product-script.js') ?>
-<? begin_form($URL.'/product'.($row['id']?'?id='.$row['id']:'')) ?>
-<?=hidden('id',$row['id'])?>
-
+<? if ($RO>=0) { ?>
+<? begin_form() ?>
 <table class="fields">
+	<? if ($RO) { ?>
+	<? if ($row['barcode']!==null) { ?>
+	<tr><th>B/C:</th><td>
+		<?=input('barcode',$row,13,$RO)?>
+	</td></tr>
+	<? } ?>
+	<? } else { ?>
+	<tr><th>Name:</th><td>
+		<?=input('name',$row,array(40,64),$RO)?>
+
+		<? if ($row['type']!==null) {
+			print hidden('type',$row);
+		} else {
+			print ' ';
+			print dropdown('type',$row,array(
+				array('1','Foods'),
+				array('2','Consumables'),
+				array('3','Miscellaneous'),
+			),$RO);
+		}?>
+
+		<? if (!$RO || $row['barcode']!==null) { ?>
+		<b>B/C:</b>
+		<?=input('barcode',$row,13,$RO)?>
+		<? } ?>
+	</td></tr>
+	<? } ?>
+
 	<tr<?=$row['parent']?'':' class="noprint"'?>><th>Parent:</th><td>
 		<?= $RO
 			? ( $row['parent']
@@ -251,33 +287,6 @@
 </table>
 
 <table class="fields">
-	<? if ($RO) { ?>
-	<? if ($row['barcode']!==null) { ?>
-	<tr><th>B/C:</th><td>
-		<?=input('barcode',$row,13,$RO)?>
-	</td></tr>
-	<? } ?>
-	<? } else { ?>
-	<tr><th>Name:</th><td>
-		<?=input('name',$row,array(40,64),$RO)?>
-
-		<? if ($row['type']!==null) {
-			print hidden('type',$row);
-		} else {
-			print ' ';
-			print dropdown('type',$row,array(
-				array('1','Foods'),
-				array('2','Consumables'),
-				array('3','Miscellaneous'),
-			),$RO);
-		}?>
-
-		<b>B/C:</b>
-
-		<?=input('barcode',$row,13,$RO)?>
-	</td></tr>
-	<? } ?>
-
 	<? if (!$RO || $row['maker']) { ?>
 	<tr><th>Manufacturer:</th><td><?= person_select_html('maker',$row,$RO,'(anyone or unknown)') ?></td></tr>
 	<? } ?>
@@ -459,5 +468,5 @@
 <? } ?>
 </td></tr></table>
 <? end_form() ?>
-
+<? } ?>
 <? include 'app/end.php' ?>

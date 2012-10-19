@@ -2,19 +2,19 @@
 	require_once 'app/init.php';
 
 	$row = given('receipt.id', array(
-		'parent'=>array(0,''=>null),
-		'issued'=>array('',''=>null),
-		'store'=>array(0,''=>null),
-		'person'=>array(0,''=>null),
-		'product'=>array(0,''=>null),
-		'units'=>array(0,''=>null),
-		'length'=>array(0.0,''=>null),
-		'area'=>array(0.0,''=>null),
-		'weight'=>array(0.0,''=>null),
-		'net_weight'=>array(0.0,''=>null),
-		'net_volume'=>array(0.0,''=>null),
-		'amount'=>array(0.0,''=>null),
-		'notes'=>array('',''=>null),
+		'parent'=>'int',
+		'issued'=>'str1',
+		'store'=>'int',
+		'person'=>'int',
+		'product'=>'int',
+		'units'=>'int',
+		'length'=>'float',
+		'area'=>'float',
+		'weight'=>'float',
+		'net_weight'=>'float',
+		'net_volume'=>'float',
+		'amount'=>'float',
+		'notes'=>'str1',
 	));
 
 	if ($row['id']!==null) {

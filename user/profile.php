@@ -1,10 +1,10 @@
 <? $AUTH=true;
 	require_once 'app/init.php';
 
-	$row = given('store.id', array(
-		'birth'=>array('',''=>null),
-		'gender'=>array(0,''=>null),
-		'pregnancy'=>array(0,''=>null),
+	$row = given('users.id', array(
+		'birth'=>'str1',
+		'gender'=>'int',
+		'pregnancy'=>'int',
 	));
 
 	if (posting()) try {

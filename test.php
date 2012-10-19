@@ -1,6 +1,11 @@
 <?
 	require_once 'app/init.php';
 	$_SESSION['alert'] = 'This is an alert message.';
+
+	$row = given('test.id', array(
+		'a'=>123,
+	));
+	error_log(repr($row));
 ?>
 <? include 'app/begin.php' ?>
 

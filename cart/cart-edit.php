@@ -3,8 +3,8 @@
 require_once 'app/init.php';
 
 $row = given('cart_item.id', array(
-	'quantity'=>0.0,
-	#'unit'=>0,
+	'quantity'=>'float',
+	#'unit'=>'int',
 ));
 
 $ci = fetch('cart_item.id',$row['id']);

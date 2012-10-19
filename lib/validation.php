@@ -7,11 +7,17 @@ function validate_email($email,$id) {
 		mistake($id, 'Incorrect email address');
 }
 
-function validate_telephone(&$phone,$id,$country_code=null) {
-	$phone = str_replace('.','',trim($phone));
-	$phone = str_replace('-','',trim($phone));
+function to_phone($phone) {
+	$phone = trim($phone);
+	$phone = str_replace('.','',$phone);
+	$phone = str_replace('-','',$phone);
 	$phone = preg_replace('/\s+/','',$phone);
 	$phone = preg_replace('/^00/','+',$phone);
+	if ($phone==='') return null;
+	return $phone;
+}
+function validate_telephone(&$phone,$id,$country_code=null) {
+	$phone = to_phone($phone);
 
 	if ($country_code!==null
 	    && strlen($phone) && substr($phone,0,1)!=='+')

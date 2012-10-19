@@ -3,19 +3,19 @@
 	require_once 'lib/validation.php';
 
 	$row = given('person.id', array(
-		'user_id'=>0,
-		'name'=>array('',''=>null),
-		'address'=>array('',''=>null),
-		'postcode'=>array('',''=>null),
-		'postbox'=>array('',''=>null),
-		'phone'=>array('',''=>null),
-		'phone2'=>array('',''=>null),
-		'fax'=>array('',''=>null),
-		'email'=>array('',''=>null),
-		'website'=>array('',''=>null),
-		'afm'=>array('',''=>null),
-		'doy'=>array('',''=>null),
-		'notes'=>array('',''=>null),
+		'user_id'=>'int',
+		'name'=>'str1',
+		'address'=>'str1',
+		'postcode'=>'str1',
+		'postbox'=>'str1',
+		'phone'=>'to_phone',
+		'phone2'=>'to_phone',
+		'fax'=>'to_phone',
+		'email'=>'str1',
+		'website'=>'str1',
+		'afm'=>'str1',
+		'doy'=>'str1',
+		'notes'=>'str1',
 	));
 
 	if (posting()) try {
@@ -115,9 +115,7 @@
 <? if (has_right('admin')) { ?>
 	<tr class="noprint"><th>USER ID:</th><td><?=number_input('user_id',$row,null,$RO)?></td></tr>
 <? } ?>
-	<? if (!$RO) { ?>
 	<tr><th>Name Sn:</th><td><?=input('name',$row,array(48,64),$RO)?></td></tr>
-	<? } ?>
 	<tr><th>Address:</th><td><?=textarea('address',$row,48,3,$RO)?></td></tr>
 	<tr><th>Post code:</th><td><?=input('postcode',$row,6,$RO)?></td></tr>
 	<tr><th>P.O. box:</th><td><?=input('postbox',$row,6,$RO)?></td></tr>
@@ -126,12 +124,7 @@
 	<tr><th>FAX:</th><td><?=input('fax',$row,16,$RO)?></td></tr>
 	<tr><th>Email:</th><td><?=input('email',$row,array(24,127),$RO)?></td></tr>
 	<tr><th>Website:</th><td><?=input('website',$row,array(32,127),$RO)?></td></tr>
-	<? if (!$RO || $row['notes']!==null) { ?>
-	<tr><th>Notes:</th><td><?= $RO
-		? '<pre>'.html($row['notes']).'</pre>'
-		: textarea('notes',$row,64,10,$RO)
-	?></td></tr>
-	<? } ?>
+	<tr><th>Notes:</th><td><?=textarea('notes',$row,48,3,$RO)?></td></tr>
 
 <? if (has_right('register-persons')) { ?>
 	<tr><td colspan="2" class="buttons">

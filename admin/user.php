@@ -3,18 +3,18 @@
 	require_once 'lib/validation.php';
 
 	$row = given('users.id', array(
-		'username'=>array('',''=>null),
-		'password'=>array('',''=>null),
-		'email'=>array('',''=>null),
-		'registered'=>array('',''=>null),
-		'confirmation'=>array('',''=>null),
-		'confirmed'=>array('',''=>null),
-		'active'=>array(false),
-		'timezone'=>array('',''=>null),
-		'birth'=>array('',''=>null),
-		'gender'=>array(0),
-		'pregnancy'=>array(0),
-		//'demographic_group'=>array(0,''=>null),
+		'username'=>'str1',
+		'password'=>'str1',
+		'email'=>'str1',
+		'registered'=>'str1',
+		'confirmation'=>'str1',
+		'confirmed'=>'str1',
+		'active'=>'boolean',
+		'timezone'=>'str1',
+		'birth'=>'str1',
+		'gender'=>'int',
+		'pregnancy'=>'int',
+		//'demographic_group'=>'int',
 	));
 
 	if (posting()) try {

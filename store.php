@@ -3,14 +3,14 @@
 	require_once 'lib/validation.php';
 
 	$row = given('store.id', array(
-		'owner'=>array('',''=>null),
-		'name'=>array('',''=>null),
-		'address'=>array('',''=>null),
-		'postcode'=>array('',''=>null),
-		'phone'=>array('',''=>null),
-		'phone2'=>array('',''=>null),
-		'fax'=>array('',''=>null),
-		'notes'=>array('',''=>null),
+		'owner'=>'int',
+		'name'=>'str',
+		'address'=>'str1',
+		'postcode'=>'str1',
+		'phone'=>'str1',
+		'phone2'=>'str1',
+		'fax'=>'str1',
+		'notes'=>'str1',
 	));
 
 	if (posting()) try {
@@ -90,40 +90,30 @@
 		<td><?=textarea('address',$row,48,3,$RO)?></td>
 	</tr>
 
-	<? if (!$RO || $row['postcode']) { ?>
 	<tr>
 		<th class="left">Post code:</th>
 		<td><?=input('postcode',$row,6,$RO)?></td>
 	</tr>
-	<? } ?>
 
-	<? if (!$RO || $row['phone']) { ?>
 	<tr>
 		<th class="left">Phone:</th>
 		<td><?=input('phone',$row,16,$RO)?></td>
 	</tr>
-	<? } ?>
 
-	<? if (!$RO || $row['phone2']) { ?>
 	<tr>
 		<th class="left">Phone:</th>
 		<td><?=input('phone2',$row,16,$RO)?></td>
 	</tr>
-	<? } ?>
 
-	<? if (!$RO || $row['fax']) { ?>
 	<tr>
 		<th class="left">FAX:</th>
 		<td><?=input('fax',$row,16,$RO)?></td>
 	</tr>
-	<? } ?>
 
-	<? if (!$RO || $row['notes']!==null) { ?>
 	<tr>
 		<th class="left">Notes:</th>
-		<td><?=textarea('notes',$row,64,6,$RO)?></td>
+		<td><?=textarea('notes',$row,48,3,$RO)?></td>
 	</tr>
-	<? } ?>
 
 <? if (has_right('register-stores')) { ?>
 	<tr><td colspan="2" class="buttons">

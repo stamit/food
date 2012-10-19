@@ -4,13 +4,13 @@
 	require_once 'lib/validation.php';
 
 	$row = given('nutrient.id', array(
-		'order'=>0,
-		'column'=>0,
-		'tag'=>'',
-		'name'=>'',
-		'description'=>'',
-		'unit'=>'',
-		'decimals'=>0,
+		'order'=>'int',
+		'column'=>'int',
+		'tag'=>'str',
+		'name'=>'str',
+		'description'=>'str',
+		'unit'=>'str',
+		'decimals'=>'int',
 	));
 
 	if (posting()) try {

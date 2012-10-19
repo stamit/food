@@ -2,11 +2,11 @@
 	require_once 'app/init.php';
 
 	$row = given('consumption.id', array(
-		'consumed'=>array('',''=>null),
-		'product'=>array(0,''=>null),
-		'units'=>array(0,''=>null),
-		'weight'=>array(0.0,''=>null),
-		'volume'=>array(0.0,''=>null),
+		'consumed'=>'str1',
+		'product'=>'int',
+		'units'=>'int',
+		'weight'=>'float',
+		'volume'=>'float',
 	));
 
 	if ($row['id']!==null) {
