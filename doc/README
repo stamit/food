@@ -32,6 +32,6 @@ SQL statements for ALTERing the database tables (ADDing, MODIFYing and DROPping
 columns) so that a database with schema A will be converted to schema B. If the
 first argument is '-', it will read the first file form stdin. This way you can
 pipe the output of `usda-export-mysql.py' directly to it. For example, this
-command will 
+command will update the "usda_" tables in the "food" database on localhost:
 
 	python usda-export-mysql.py food | python usda-import.py - usda-sr25.txt | mysql food
