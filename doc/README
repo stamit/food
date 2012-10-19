@@ -12,26 +12,32 @@ distribution from this URL:
 
 	http://www.ars.usda.gov/Services/docs.htm?docid=22771
 
-`usda-import.py' is a Python script that will take the `usda-sr25.txt' file (or
-any named file) and produce SQL statements for MySQL or PostreSQL that will
-create and fill the database tables. It uses any UPPERCASE_TABLE.txt files it
-can find in the current working directory as data inputs for INSERTING:
+`usda-import' is a Python script that will take the `usda-sr25.txt' file (or
+any named file) and produce SQL statements for MySQL or PostreSQL (warning:
+this is untested) that will create and fill the database tables. It uses any
+UPPERCASE_TABLE.txt files it can find in the current working directory as data
+inputs for INSERTING:
 
 	cd sr25
-	python ../usda-import.py ../usda-sr25.txt | mysql usda
+	../usda-import ../usda-sr25.txt | mysql usda
 
-`usda-export-mysql.py' will connect to your MySQL database and output the
-schema in the same USDA format that the above script will read. This command
-will connect to MySQL on localhost, use database "food", and read from tables
-with prefix "usda_" (which it will discard):
+`usda-export-mysql' will connect to your MySQL database and output the schema
+in the same USDA format that the above script will read. This command will
+connect to MySQL on localhost, use database "food", and read from tables with
+prefix "usda_" (which it will discard):
 
-	python usda-export-mysql.py //localhost/food/usda_ >current-schema.txt
+	./usda-export-mysql //localhost/food/usda_ >current-schema.txt
 
-If you give `usda-import.py' two schema arguments A and B, it will output the
-SQL statements for ALTERing the database tables (ADDing, MODIFYing and DROPping
-columns) so that a database with schema A will be converted to schema B. If the
-first argument is '-', it will read the first file form stdin. This way you can
-pipe the output of `usda-export-mysql.py' directly to it. For example, this
-command will update the "usda_" tables in the "food" database on localhost:
+If you give `usda-import' two schema arguments A and B, it will output the SQL
+statements for ALTERing the database tables (ADDing, MODIFYing and DROPping
+columns as well as CREATEing and DROPping tables as needed) so that a database
+with schema A will be converted to schema B. If the first argument is '-', it
+will read the first file from stdin. This way you can pipe the output of
+`usda-export-mysql' directly to `usda-import'. For example, this command will
+update the `usda_...' tables in the `food' database on localhost to match the
+description in `usda-sr25.txt':
 
-	python usda-export-mysql.py food | python usda-import.py - usda-sr25.txt | mysql food
+	../usda-export-mysql food | ../usda-import - usda-sr25.txt | mysql food
+
+INSERT statements will be generated only if there exist files named
+UPPERCASETABLENAME.txt in the current working directory.

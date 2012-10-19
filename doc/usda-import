@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 # * reads schema.txt as standard input and UPPERCASE.txt files in working directory
 # * produces SQL statements for importing database into MySQL or PostgreSQL
@@ -6,6 +7,9 @@
 #
 # with two arguments it outputs ALTER TABLE statements for modifying the first
 # schema to match the second
+#
+# XXX assumes empty fields in nullable foreign key VARCHAR columns are null and
+# not empty
 #
 # any table reference cycles might not be handled properly
 #
@@ -18,15 +22,23 @@
 import sys
 import re
 
-droptables = 1
-writeschema = 1
-writedata = 1
-tableprefix = 'usda_'
+tableprefix = 'usda_'  # prefix will be added to table names and foreign key table names (i.e. imported tables can only have foreign keys among themselves)
 
+droptables = 1  # DROP the tables that appear in the old schema but not in the new
+dropbeforecreate = 0  # output "DROP TABLE IF EXISTS" statements before any "CREATE TABLE"s
+writeschema = 1  # output "CREATE TABLE" and "ALTER TABLE" statements
+writeforeignkeys = 1  # add "FOREIGN KEY"s when new schema has them but old doesn't. TRICK: to delay adding indices until after data has been imported, set this to 0 and then to 1
+
+writedata = 1  # simple "INSERT" statements for data
+varchar_foreign_nulls = 1  # empty values for *foreign key* nullable VARCHAR fields will be turned into NULL, to avoid violating foreign key constraints
+varchar_normal_nulls = 0  # empty values for *all other* nullable VARCHAR fields will be turned into NULL
+
+#
 # for MySQL
+#
 fieldquote = '`'
 commentsyntax = 0
-recordgroup = 16  # to avoid MySQL "packet too large" errors
+recordgroup = 32  # to avoid MySQL "packet too large" errors
 mysql = 1
 typemap = {
 	'A':'VARCHAR',
@@ -47,10 +59,12 @@ typemap = {
 	'TIMESTAMP':'TIMESTAMP',
 }
 
-# for PostreSQL
+#
+# for PostreSQL (NOT TESTED)
+#
 #fieldquote = '"'
 #commentsyntax = 1
-#recordgroup = 16
+#recordgroup = 32
 #typemap = {
 #	'A':'VARCHAR',
 #	'VARCHAR':'VARCHAR',
@@ -70,8 +84,8 @@ typemap = {
 #	'TIMESTAMP':'TIMESTAMP WITH TIME ZONE',
 #}
 
-def readschema(f):
-	lineno = 1
+def readschema(f,fn):
+	lineno = 0
 	tables = {}
 	curtable = None
 
@@ -79,6 +93,7 @@ def readschema(f):
 		while True:
 			line = f.readline()
 			if not line: break
+			lineno=lineno+1
 
 			line = line.strip('\r\n')
 			if not line: continue
@@ -94,66 +109,96 @@ def readschema(f):
 
 			words = line.split()
 
-			if len(words)==1 or words[1]=='T':
+			if len(words)==1:
 				tablename = words[0]
 				if not re.match('[A-Za-z_][A-Za-z0-9_]*$', tablename):
 					raise Exception('can only handle alphanumeric characters and underscores in table names: %s'%line)
 
 				curtable = tables[tablename] = []
 			else:
-				if len(words)<4 or len(words)>5:
-					raise Exception('expected: {K|F} sqlfield {N|A} {len|digits.digits} {Y|N} [reftable.refkey]')
+				if len(words)<2 or len(words)>5:
+					raise Exception('expected: sqlfield {N|A|TYPE} [{len|digits.digits} [{Y|N} [reftable.refkey]]]')
 
 				if len(words[1])==2 and words[1][-1:]=='*':
 					keyfield = True
-					words[1] = words[1][:1]
-				elif len(words[2])==2 and words[2][-1:]=='*':
+					words[1] = words[1][:-1]
+				elif len(words)>=3 and len(words[2])>=2 and words[2][-1:]=='*':
 					keyfield = True
-					words[2] = words[2][:1]
+					words[2] = words[2][:-1]
 				else:
 					keyfield = False
 
+				#
+				# [0] field name
+				#
+				fname = words[0].split('.')
+				if len(fname)>2 or not fname[0] or not fname[-1]:
+					raise Exception('expected [TABLE.]FIELD as first word')
+
+				field = [fname[-1]]
+
+				#
+				# [1] type
+				#
 				if typemap.get(words[1])==None:
 					raise Exception("unrecognized type (second word): %s"%line)
-				words[1] = typemap[words[1]]
 
-				if words[2] == '-':
-					words[2] = None
-				else:
-					words[2] = tuple(map(int,words[2].split('.')))
-					while len(words[2]) and words[2][-1]==0:
-						words[2] = words[2][:-1]
-					if len(words[2])==1:
-						words[2] = words[2][0]
+				field.append(typemap[words[1]])
 
-				if words[3]=='Y':
-					words[3] = True
-				elif words[3]=='N':
-					words[3] = False
-				else:
-					raise Exception("expected 'Y' or 'N' as fourth word: %s"%line)
+				#
+				# [2] length or digits.decimals
+				#
+				if len(words)>=3:
+					if words[2] == '-':
+						field.append(None)
+					else:
+						field.append(tuple(map(int,words[2].split('.'))))
+						while len(field[2]) and field[2][-1]==0:
+							field[2] = field[2][:-1]
+						if len(field[2])==1:
+							field[2] = field[2][0]
+				elif field[1]=='DECIMAL' or field[1]=='VARCHAR':
+					raise Exception('need field length for DECIMAL and VARCHAR fields as third word')
 
-				if len(words)==4:
-					words.append(None)
+				#
+				# [3] nullable
+				#
+				if len(words)>=4:
+					if words[3]=='Y':
+						field.append(True)
+					elif words[3]=='N':
+						field.append(False)
+					else:
+						raise Exception("expected nullable flag ('Y' or 'N') as fourth word (defaults to 'N' if missing)")
 				else:
-					words[4] = words[4].split('.')
-					if len(words[4])<>2:
+					field.append(False)
+
+				#
+				# [4] reftable.refkey
+				#
+				if len(words)>=5:
+					field.append(words[4].split('.'))
+					if len(field[4])<>2:
 						raise Exception("expected REFTABLE.REFKEY as fifth word")
-
-				words.append(keyfield)
-
-				words.append(comment)
-
-				fname = words[0].split('.')
-				if len(fname)==1:
-					curtable.append(words)
 				else:
-					words[0] = fname[1]
-					tables[fname[0]].append(words)
+					field.append(None)
 
-			lineno=lineno+1
+				#
+				# [5] keyfield?
+				#
+				field.append(keyfield)
+
+				#
+				# [6] comment
+				#
+				field.append(comment)
+
+				if len(fname)==2:
+					tables[fname[0]].append(field)
+				else:
+					curtable.append(field)
 	except Exception, x:
-		sys.stderr.write('error in line %d: %s'%(lineno,repr(x)))
+		sys.stderr.write('%s:%d: %s\n\n'%(fn,lineno,'; '.join(map(str,x.args))))
 		raise
 
 	return tables
@@ -200,6 +245,17 @@ def field_def_pkey(s):
 	return field_def(s,1)
 
 def typed_value(value,field):
+	if field[3] and value=='':
+		if field[1]=='DECIMAL':
+			return 'NULL'
+		elif field[1]=='VARCHAR':
+			if field[4]<>None:
+				if varchar_foreign_nulls:
+					return 'NULL'
+			else:
+				if varchar_normal_nulls:
+					return 'NULL'
+
 	return sqlstring(value)
 
 def print_table(tablename,fields):
@@ -276,19 +332,17 @@ def print_drops(tablename,prevtables,tables,dropped):
 			if f2[4] and f2[4][0]==tablename:
 				print_drops(tablename2,prevtables,tables,dropped)
 
-	#if (prevtables.get(tablename)==None and tables.get(tablename)<>None) or \
-	if (prevtables.get(tablename)<>None and tables.get(tablename)==None):
+	if (dropbeforecreate and (prevtables==None or prevtables.get(tablename)==None) and tables.get(tablename)<>None):
 		sys.stdout.write('DROP TABLE IF EXISTS %s;\n'%sqlfield(tableprefix+tablename))
 		sys.stdout.write('\n')
 
-def print_schema(tablename,prevtables,tables,written):
-	if written.get(tablename)==1:
-		return
-	written[tablename] = 1
+	elif ((prevtables<>None and prevtables.get(tablename)<>None) and tables.get(tablename)==None):
+		sys.stdout.write('DROP TABLE %s;\n'%sqlfield(tableprefix+tablename))
+		sys.stdout.write('\n')
 
-	#
-	# dump prerequisites
-	#
+def print_schema(tablename,prevtables,tables,written):
+	if written.get(tablename)==1: return
+	written[tablename] = 1
 	fields = tables[tablename]
 	for f in fields:
 		if f[4]:
@@ -306,9 +360,10 @@ def print_schema(tablename,prevtables,tables,written):
 		else:
 			commalist = map(field_def_pkey,fields)
 
-		for f in fields:
-			if f[4]:
-				commalist.append('FOREIGN KEY (%s) REFERENCES %s(%s)'%(f[0],tableprefix+f[4][0],f[4][1]))
+		if writeforeignkeys:
+			for f in fields:
+				if f[4]:
+					commalist.append('FOREIGN KEY (%s) REFERENCES %s(%s)'%(f[0],tableprefix+f[4][0],f[4][1]))
 
 		if mysql:
 			extra = ' ENGINE = InnoDB';
@@ -345,7 +400,7 @@ def print_schema(tablename,prevtables,tables,written):
 						s = s + ' AFTER ' + sqlfield(fa)
 					commalist.append(s)
 
-				if pf[4]==None and f[4]<>None:
+				if writeforeignkeys and pf[4]==None and f[4]<>None:
 					commalist.append('ADD FOREIGN KEY (%s) REFERENCES %s(%s)'%(f[0],tableprefix+f[4][0],f[4][1]))
 					if mysql:
 						extra = 'ENGINE = InnoDB'
@@ -370,13 +425,8 @@ def print_schema(tablename,prevtables,tables,written):
 			sys.stdout.write('\n');
 
 def print_data(tablename,tables,written):
-	if written.get(tablename)==1:
-		return
+	if written.get(tablename)==1: return
 	written[tablename] = 1
-
-	#
-	# dump prerequisites
-	#
 	for f in tables[tablename]:
 		if f[4]:
 			print_data(f[4][0],tables,written)
@@ -389,37 +439,37 @@ def print_data(tablename,tables,written):
 if __name__ == '__main__':
 	if len(sys.argv)<2:
 		prevtables = None
-		tables = readschema(sys.stdin)
+		tables = readschema(sys.stdin,'<stdin>')
 
 	elif len(sys.argv)==2:
 		prevtables = None
 		f = open(sys.argv[1],'r')
-		tables = readschema(f)
+		tables = readschema(f,sys.argv[1])
 		f.close()
 
 	elif len(sys.argv)==3:
 		if sys.argv[1]=='-':
-			prevtables = readschema(sys.stdin)
+			prevtables = readschema(sys.stdin,'<stdin>')
 		else:
 			f = open(sys.argv[1],'r')
-			prevtables = readschema(f)
+			prevtables = readschema(f,sys.argv[1])
 			f.close()
 		f = open(sys.argv[2],'r')
-		tables = readschema(f)
+		tables = readschema(f,sys.argv[2])
 		f.close()
 
 	elif len(sys.argv)==4:
 		tableprefix = sys.argv[1]
 
 		if sys.argv[2]=='-':
-			prevtables = readschema(sys.stdin)
+			prevtables = readschema(sys.stdin,sys.argv[1])
 		else:
 			f = open(sys.argv[2],'r')
-			prevtables = readschema(f)
+			prevtables = readschema(f,sys.argv[2])
 			f.close()
 
 		f = open(sys.argv[3],'r')
-		tables = readschema(f)
+		tables = readschema(f,sys.argv[3])
 		f.close()
 
 	else:
@@ -430,8 +480,9 @@ if __name__ == '__main__':
 		dropped={}
 		for tablename in tables:
 			print_drops(tablename,prevtables,tables,dropped)
-		for tablename in prevtables:
-			print_drops(tablename,prevtables,tables,dropped)
+		if prevtables<>None:
+			for tablename in prevtables:
+				print_drops(tablename,prevtables,tables,dropped)
 
 	if writeschema:
 		written = {}
