@@ -1,5 +1,6 @@
 `mysql-schema.sql' is the table schema for MySQL. `mysql-*' is the minimum data
-for some of the tables, so that the application can work.
+for some of the tables, so that the application can work. Import these files
+into a new database.
 
 `food-create.sql' and `food-drop.sql' is an attempt to make database tables for
 PostgreSQL. If the tables are set up properly, I assume they should be
@@ -12,32 +13,52 @@ distribution from this URL:
 
 	http://www.ars.usda.gov/Services/docs.htm?docid=22771
 
-`usda-import' is a Python script that will take the `usda-sr25.txt' file (or
-any named file) and produce SQL statements for MySQL or PostreSQL (warning:
-this is untested) that will create and fill the database tables. It uses any
-UPPERCASE_TABLE.txt files it can find in the current working directory as data
-inputs for INSERTING:
 
-	cd sr25
-	../usda-import ../usda-sr25.txt | mysql usda
+schema-from-mysql
+=================
 
-`usda-export-mysql' will connect to your MySQL database and output the schema
-in the same USDA format that the above script will read. This command will
-connect to MySQL on localhost, use database "food", and read from tables with
-prefix "usda_" (which it will discard):
+`schema-from-mysql' will connect to your MySQL database and output the table
+descriptions in USDA-like format.
 
-	./usda-export-mysql //localhost/food/usda_ >current-schema.txt
+To export the current table descriptions of the whole "food" database on
+localhost, do this:
 
-If you give `usda-import' two schema arguments A and B, it will output the SQL
-statements for ALTERing the database tables (ADDing, MODIFYing and DROPping
+	./schema-from-mysql food >current-schema.txt
+
+Or this:
+
+	./schema-from-mysql //localhost/food >current-schema.txt
+
+To export only the tables whose name starts with "usda_":
+
+	./schema-from-mysql food/usda_ >current-schema.txt
+
+
+schema-to-sql
+=============
+
+`schema-to-sql' will take a schema file (such as SCHEMA or `usda-sr25.txt') and
+produce SQL statements for creating and and filling the database tables. It
+uses any UPPERCASE_TABLE.txt files it can find in the current working directory
+as data for INSERTing (again in USDA format).
+
+If you give `schema-to-sql' two schema arguments A and B, it will output the
+SQL statements for ALTERing the database tables (ADDing, MODIFYing and DROPping
 columns as well as CREATEing and DROPping tables as needed) so that a database
 with schema A will be converted to schema B. If the first argument is '-', it
-will read the first file from stdin. This way you can pipe the output of
-`usda-export-mysql' directly to `usda-import'. For example, this command will
-update the `usda_...' tables in the `food' database on localhost to match the
-description in `usda-sr25.txt':
+will read the first file from stdin.
 
-	../usda-export-mysql food | ../usda-import - usda-sr25.txt | mysql food
+To update your local database "food" after getting a new version of this code:
 
-INSERT statements will be generated only if there exist files named
-UPPERCASETABLENAME.txt in the current working directory.
+	./schema-from-mysql food | ./schema-to-sql - SCHEMA | mysql food
+
+To import the USDA data into the "food" database on localhost when all tables
+have already been created:
+
+	unzip sr25.zip
+	cd sr25
+	../schema-to-sql usda_ ../usda-sr25.txt ../usda-sr25.txt | mysql usda
+
+To create the database tables when they do not already exist, you would use:
+
+	../schema-to-sql usda_ /dev/null ../usda-sr25.txt | mysql usda

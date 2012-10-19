@@ -8,12 +8,14 @@
 # with two arguments it outputs ALTER TABLE statements for modifying the first
 # schema to match the second
 #
+# TODO secondary keys and database indices
+#
 # XXX assumes empty fields in nullable foreign key VARCHAR columns are null and
 # not empty
 #
-# any table reference cycles might not be handled properly
+# XXX any table reference cycles might not be handled properly
 #
-# cannot drop foreign keys
+# XXX cannot drop foreign keys
 #
 # XXX renaming a column will cause it to be dropped; KEEP NAMES UNCHANGED
 #
@@ -22,7 +24,7 @@
 import sys
 import re
 
-tableprefix = 'usda_'  # prefix will be added to table names and foreign key table names (i.e. imported tables can only have foreign keys among themselves)
+tableprefix = ''  # prefix will be added to table names and foreign key table names (i.e. imported tables can only have foreign keys among themselves)
 
 droptables = 1  # DROP the tables that appear in the old schema but not in the new
 dropbeforecreate = 0  # output "DROP TABLE IF EXISTS" statements before any "CREATE TABLE"s
@@ -230,7 +232,9 @@ def field_def(words,singlekeyfield=0):
 		else:
 			t.append(words[1])
 
-	if not words[3]:
+	if words[3]:
+		t.append('NULL')
+	else:
 		t.append('NOT NULL')
 
 	if singlekeyfield and words[5]:
@@ -363,7 +367,7 @@ def print_schema(tablename,prevtables,tables,written):
 		if writeforeignkeys:
 			for f in fields:
 				if f[4]:
-					commalist.append('FOREIGN KEY (%s) REFERENCES %s(%s)'%(f[0],tableprefix+f[4][0],f[4][1]))
+					commalist.append('FOREIGN KEY (%s) REFERENCES %s(%s)'%(sqlfield(f[0]),sqlfield(tableprefix+f[4][0]),sqlfield(f[4][1])))
 
 		if mysql:
 			extra = ' ENGINE = InnoDB';
@@ -401,7 +405,7 @@ def print_schema(tablename,prevtables,tables,written):
 					commalist.append(s)
 
 				if writeforeignkeys and pf[4]==None and f[4]<>None:
-					commalist.append('ADD FOREIGN KEY (%s) REFERENCES %s(%s)'%(f[0],tableprefix+f[4][0],f[4][1]))
+					commalist.append('ADD FOREIGN KEY (%s) REFERENCES %s(%s)'%(sqlfield(f[0]),sqlfield(tableprefix+f[4][0]),sqlfield(f[4][1])))
 					if mysql:
 						extra = 'ENGINE = InnoDB'
 			else:
@@ -475,6 +479,9 @@ if __name__ == '__main__':
 	else:
 		sys.stderr.write('syntax: %s [[[PREFIX] {PREVSCHEMA|-}] SCHEMA]\n'%sys.argv[0])
 		sys.exit(1)
+
+	if mysql:
+		sys.stdout.write('SET NAMES utf8;\n\n');
 
 	if droptables:
 		dropped={}

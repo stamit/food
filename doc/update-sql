@@ -1,0 +1,10 @@
+#!/bin/sh
+cd "`dirname "$0"`"
+
+if test -z "$1"; then
+	DB="food"
+else
+	DB="$1"
+fi
+
+./schema-from-mysql "$DB" | ./schema-to-sql - SCHEMA

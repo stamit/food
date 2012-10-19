@@ -42,7 +42,7 @@ if __name__=='__main__':
 
 	host = 'localhost'
 	charset = 'utf8'
-	tableprefix = 'usda_'
+	tableprefix = ''
 
 	arg = sys.argv[1]
 	if arg.startswith('//'):

@@ -1,0 +1,469 @@
+
+cart
+id      INT -* N
+user_id INT - N users.id
+name    A 64 N
+days    FLOAT - N
+
+cart_item
+id         INT -* N
+cart       INT - N cart.id	--cart.id
+product    INT - N product.id
+quantity   FLOAT - Y
+price      FLOAT - Y
+unit       INT - N	--0:units;1:grams;2:mililitres
+multiplier FLOAT - Y
+
+consumption
+id       INT -* N
+user_id  INT - N users.id
+consumed TIMESTAMP - N
+product  INT - N product.id
+units    INT - Y
+weight   FLOAT - Y	--g
+volume   FLOAT - Y	--ml
+
+demographic_group
+id        INT -* N
+min_age   FLOAT - Y
+max_age   FLOAT - Y
+gender    INT - Y	--0:male;1:female
+pregnancy INT - Y	--0:no;1:pregnant;2:lactating
+
+email_queue
+id          INT -* N
+created     TIMESTAMP - N
+template_id INT - Y email_templates.id
+headers     TEXT - N
+recipient   A 64 Y
+subject     TEXT - Y
+text        TEXT - N
+html        TEXT - Y
+to_send     TIMESTAMP - Y
+sent        TIMESTAMP - Y
+errormsg    TEXT - Y
+active      INT - N
+
+email_templates
+id            INT -* N
+name          A 16 N
+description   A 256 Y
+subject       TEXT - N
+text          TEXT - N
+html          TEXT - Y
+queue_minutes INT - Y
+queue_tod     TIME - Y
+
+fd_descriptions
+NDB_No      INT - Y
+FdGrp_Cd    INT - Y
+Long_Desc   A 256 Y
+Shrt_Desc   A 64 Y
+ComName     A 128 Y
+ManufacName A 64 Y
+Survey      A 1 Y
+Ref_desc    A 256 Y
+Refuse      INT - Y
+SciName     A 64 Y
+N_Factor    FLOAT8 - Y
+Pro_Factor  FLOAT8 - Y
+Fat_Factor  FLOAT8 - Y
+X           FLOAT8 - Y
+
+fd_groups
+FdGrp_Cd   INT - Y
+FdGrp_Desc A 64 Y
+
+fd_nutrients
+NDB_No      INT - Y
+Shrt_Desv   A 64 Y
+Water       FLOAT8 - Y	--Water (g)
+Energ_Kcal  FLOAT8 - Y	--Energy (kcal)
+Protein     FLOAT8 - Y	--Protein (g)
+Lipid_Tot   FLOAT8 - Y	--Total fat (g)
+Ash         FLOAT8 - Y	--Ash (g)
+Carbohydrt  FLOAT8 - Y	--Carbohydrate (g)
+Fiber_TD    FLOAT8 - Y	--Total Dietary Fiber (g)
+Sugar_Tot   FLOAT8 - Y	--Sugar (g)
+Calcium     FLOAT8 - Y	--Calcium (mg)
+Iron        FLOAT8 - Y	--Iron (mg)
+Magnesium   FLOAT8 - Y	--Magnesium (mg)
+Phosphorus  FLOAT8 - Y	--Phosphorus (mg)
+Potassium   FLOAT8 - Y	--Potassium (mg)
+Sodium      FLOAT8 - Y	--Sodium (mg)
+Zinc        FLOAT8 - Y	--Zinc (mg)
+Copper      FLOAT8 - Y	--Copper (mg)
+Manganese   FLOAT8 - Y	--Manganese (mg)
+Selenium    FLOAT8 - Y	--Selenium (ug)
+Vit_C       FLOAT8 - Y	--Vitamin C (mg)
+Thiamin     FLOAT8 - Y	--Thiamin (mg)
+Riboflavin  FLOAT8 - Y	--Riboflavin (mg)
+Niacin      FLOAT8 - Y	--Niacin (mg)
+Panto_acid  FLOAT8 - Y	--Pantothenic acid (mg)
+Vit_B6      FLOAT8 - Y	--Vitamin B6 (mg)
+Folate_Tot  FLOAT8 - Y	--Folate (ug)
+Folic_acid  FLOAT8 - Y	--Folic acid (ug)
+Food_Folate FLOAT8 - Y	--Food Folate (ug)
+Folate_DFE  FLOAT8 - Y	--Folate (dietary folate equivalents) (ug)
+Vit_B12     FLOAT8 - Y	--Vitamin B12 (ug)
+Vit_A_IU    FLOAT8 - Y	--Vitamin A (ui)
+Vit_A_RAE   FLOAT8 - Y	--Vitamin A (retinol activity equivalent) (ug)
+Retinol     FLOAT8 - Y	--Retinol (ug)
+Vit_E       FLOAT8 - Y	--Vitamin E (alpha-tocopherol) (ug)
+Vit_K       FLOAT8 - Y	--Vitamin K (phylloquinone) (ug)
+Alpha_Carot FLOAT8 - Y	--Alpha-carotene (ug)
+Beta_Carot  FLOAT8 - Y	--Beta-carotene (ug)
+Beta_Crypt  FLOAT8 - Y	--beta-cryptoxanthin (ug)
+Lycopene    FLOAT8 - Y	--Lycophene (ug)
+Lut+Zea     FLOAT8 - Y	--Lutein+zeazanthin (ug)
+FA_Sat      FLOAT8 - Y	--*Saturated fatty acid (g)
+FA_Mono     FLOAT8 - Y	--*Monosaturated fatty acids (g)
+FA_Poly     FLOAT8 - Y	--*Polyunsaturated fatty acids (g)
+Cholestrl   FLOAT8 - Y	--*Cholesterol (mg)
+GmWt_1      FLOAT8 - Y
+GmWt_Desc1  A 64 Y
+GmWt_2      FLOAT8 - Y
+GmWt_Desc2  A 64 Y
+Refuse_Pct  FLOAT8 - Y	--Refuse (%)
+
+fd_weights
+NDB_No       INT - Y
+Seq          INT - Y
+Amount       FLOAT8 - Y
+Msre_Desc    A 128 Y
+Gm_Wgt       FLOAT8 - Y
+Num_Data_Pts INT - Y
+Std_Dev      FLOAT8 - Y
+
+log_database
+id         INT -* N
+time       TIMESTAMP - N
+request_id INT - N
+user_id    INT - Y
+table      A 32 N
+table_id   INT - N
+changes    TEXT - N
+
+log_hosts
+id   INT -* N
+host A 64 N
+
+log_requests
+id              INT -* N
+date            TIMESTAMP - N
+client_ip       A 15 N
+method          A 8 N
+host_id         INT - N log_hosts.id
+url_id          INT - N log_urls.id
+referer_host_id INT - Y log_hosts.id
+referer_url_id  INT - Y log_urls.id
+user_agent_id   INT - Y log_user_agents.id
+session_id      INT - Y log_sessions.id
+user_id         INT - Y users.id
+
+log_sessions
+id      INT -* N
+phpid   A 32 Y
+data    TEXT - N
+user_id INT - Y users.id
+started TIMESTAMP - Y
+ended   TIMESTAMP - Y
+expiry  TIMESTAMP - Y
+
+log_urls
+id      INT -* N
+host_id INT - N
+uri     A 255 N
+
+log_user_agents
+id   INT -* N
+name A 255 N
+
+nutrient
+id          INT -* N
+order       INT - N
+column      INT - N
+tag         A 10 Y
+name        A 24 N
+description A 32 N
+unit        A 8 N
+decimals    INT - N
+basetable   INT - N
+
+person
+id       INT -* N
+user_id  INT - N
+name     A 64 N
+address  A 127 Y
+postcode A 6 Y
+postbox  A 6 Y
+phone    A 16 Y
+phone2   A 16 Y
+fax      A 16 Y
+email    A 127 Y
+website  A 127 Y
+afm      A 9 Y
+doy      A 48 Y
+notes    TEXT - Y
+
+product
+id                      INT -* N
+user_id                 INT - Y
+parent                  INT - Y product.id	--product
+maker                   INT - Y person.id	--person
+packager                INT - Y	--person
+importer                INT - Y person.id	--person
+distributor             INT - Y person.id	--person
+name                    A 64 N
+type                    INT - Y
+barcode                 A 13 Y
+typical_price           N 6.2 Y	--€ (total price - not per unit)
+price_to_parent         INT - N
+price_no_children       INT - N
+price_no_recalc         INT - N
+typical_units           INT - Y
+units_avoid_filling     INT - N
+units_near_kg           INT - N
+ingredients             TEXT - Y
+store_temp_min          FLOAT - Y	--°C
+store_temp_max          FLOAT - Y	--°C
+store_duration          FLOAT - Y	--days
+store_conditions        INT - Y
+packaging_weight        INT - Y	--g
+recyclable_packaging    INT - Y
+glaze_weight            FLOAT - Y	--g
+net_weight              FLOAT - Y	--g
+net_volume              FLOAT - Y	--ml
+market_weight           FLOAT - Y
+sample_weight           FLOAT - Y	--g
+sample_volume           FLOAT - Y	--ml
+refuse_weight           FLOAT - Y	--g
+refuse_volume           FLOAT - Y	--ml
+water                   FLOAT - Y	--g
+energy                  FLOAT - Y	--kcal
+proteins                FLOAT - Y	--g
+carbohydrates           FLOAT - Y	--g
+sugars                  FLOAT - Y	--g
+fats                    FLOAT - Y	--g
+fats_saturated          FLOAT - Y	--g
+fats_monounsaturated    FLOAT - Y	--g
+fats_polyunsaturated    FLOAT - Y	--g
+fats_polyunsaturated_n9 FLOAT - Y	--g
+fats_polyunsaturated_n6 FLOAT - Y	--g
+fats_polyunsaturated_n3 FLOAT - Y	--g
+fats_trans              FLOAT - Y	--g
+total_fiber             FLOAT - Y	--g
+potassium               FLOAT - Y	--mg
+sodium                  FLOAT - Y	--mg
+chloride                FLOAT - Y	--mg
+ash                     FLOAT - Y	--g
+calcium                 FLOAT - Y	--mg
+phosphorus              FLOAT - Y	--mg
+iron                    FLOAT - Y	--mg
+fluoride                FLOAT - Y	--μg
+a                       FLOAT - Y	--μg RAE
+retinol                 FLOAT - Y	--μg
+alpha_carotene          FLOAT - Y	--μg
+beta_carotene           FLOAT - Y	--μg
+beta_cryptoxanthin      FLOAT - Y	--μg
+lycopene                FLOAT - Y	--μg
+lutein_zeaxanthin       FLOAT - Y	--μg
+c                       FLOAT - Y	--mg
+d                       FLOAT - Y	--μg
+e                       FLOAT - Y	--mg
+b1                      FLOAT - Y	--mg
+b2                      FLOAT - Y	--mg
+b3                      FLOAT - Y	--mg
+b5                      FLOAT - Y	--mg (pantothenic acid)
+b6                      FLOAT - Y	--mg
+b7                      FLOAT - Y	--μg (biotin)
+b9                      FLOAT - Y	--μg DFE (folate)
+folic_acid              FLOAT - Y	--μg
+folate                  FLOAT - Y	--μg
+b12                     FLOAT - Y	--μg
+k                       FLOAT - Y
+choline                 FLOAT - Y	--mg
+cholesterol             FLOAT - Y	--mg
+magnesium               FLOAT - Y	--mg
+zinc                    FLOAT - Y	--mg
+manganese               FLOAT - Y	--μg
+copper                  FLOAT - Y	--mg
+iodine                  FLOAT - Y	--μg
+selenium                FLOAT - Y	--μg
+molybdenium             FLOAT - Y	--μg
+chromium                FLOAT - Y	--μg
+boron                   FLOAT - Y	--μg
+nickel                  FLOAT - Y	--μg
+silicon                 FLOAT - Y	--μg
+vanadium                FLOAT - Y	--μg
+sulfate                 FLOAT - Y	--mg
+
+product_nutrient
+id       INT -* N
+product  INT - N product.id
+nutrient INT - N nutrient.id
+value    FLOAT - Y
+source   INT - N	--0:manual;1:product;2:children;3:fooddb
+id2      INT - Y
+
+receipt
+id         INT -* N
+user_id    INT - N users.id
+parent     INT - Y receipt.id	--receipt
+issued     TIMESTAMP - Y
+person     INT - Y person.id
+store      INT - Y store.id
+amount     N 6.2 Y	--total price - not price per unit
+product    INT - Y product.id
+units      INT - Y
+length     FLOAT - Y
+area       FLOAT - Y
+weight     FLOAT - Y	--g (gross weight)
+net_weight FLOAT - Y	--g
+net_volume FLOAT - Y	--ml
+notes      TEXT - Y
+
+right
+id          INT -* N
+name        A 20 N
+expression  A 64 N
+description TEXT - Y
+
+storage_conditions
+id          INT -* N
+description A 64 N
+
+store
+id       INT -* N
+owner    INT - Y person.id
+name     A 127 N
+address  A 127 Y
+postcode A 6 Y
+phone    A 16 Y
+phone2   A 16 Y
+fax      A 16 Y
+notes    TEXT - Y
+
+threshold
+id                INT -* N
+demographic_group INT - Y demographic_group.id
+user              INT - Y users.id
+nutrient          INT - N nutrient.id
+min               FLOAT - Y
+best              FLOAT - Y
+max               FLOAT - Y
+
+usda_data_src
+DataSrc_ID  A 6* N	--Unique number identifying the reference/source.
+Authors     A 255 Y	--List of authors for a journal article or name of sponsoring organization for other documents.
+Title       A 255 N	--Title of article or name of document, such as a report from a company or trade association.
+Year        A 4 Y	--Year article or document was published.
+Journal     A 135 Y	--Name of the journal in which the article was published.
+Vol_City    A 16 Y	--Volume number for journal articles, books, or reports; city where sponsoring organization is located.
+Issue_State A 5 Y	--Issue number for journal article; State where the sponsoring organization is located.
+Start_Page  A 5 Y	--Starting page number of article/document.
+End_Page    A 5 Y	--Ending page number of article/document.
+
+usda_datsrcln
+NDB_No     A 5* N usda_food_des.NDB_No	--5-digit Nutrient Databank number.
+Nutr_No    A 3* N usda_nutr_def.Nutr_No	--Unique 3-digit identifier code for a nutrient.
+DataSrc_ID A 6* N usda_data_src.DataSrc_ID	--Unique ID identifying the reference/source.
+
+usda_deriv_cd
+Deriv_Cd   A 4* N	--Derivation Code.
+Deriv_Desc A 120 N	--Description of derivation code giving specific information on how the value was determined.
+
+usda_fd_group
+FdGrp_Cd   A 4* N	--4-digit code identifying a food group. Only the first 2 digits are currently assigned. In the future, the last 2 digits may be used. Codes may not be consecutive.
+FdGrp_Desc A 60 N	--Name of food group.
+
+usda_food_des
+NDB_No      A 5* N	--5-digit Nutrient Databank number that uniquely identifies a food item. If this field is defined as numeric, the leading zero will be lost.
+FdGrp_Cd    A 4 N usda_fd_group.FdGrp_Cd	--4-digit code indicating food group to which a food item belongs.
+Long_Desc   A 200 N	--200-character description of food item.
+Shrt_Desc   A 60 N	--60-character abbreviated description of food item.  Generated from the 200-character description using abbreviations in Appendix A. If short description is longer than 60 characters, additional abbreviations are made.
+ComName     A 100 Y	--Other names commonly used to describe a food, including local or regional names for various foods, for example, "soda" or "pop" for "carbonated beverages."
+ManufacName A 65 Y	--Indicates the company that manufactured the product, when appropriate.
+Survey      A 1 Y	--Indicates if the food item is used in the USDA Food and Nutrient Database for Dietary Studies (FNDDS) and thus has a complete nutrient profile for the 65 FNDDS nutrients.
+Ref_desc    A 135 Y	--Description of inedible parts of a food item (refuse), such as seeds or bone.
+Refuse      N 2 Y	--Percentage of refuse.
+SciName     A 65 Y	--Scientific name of the food item. Given for the least processed form of the food (usually raw), if applicable.
+N_Factor    N 4.2 Y	--Factor for converting nitrogen to protein (see p. 12).
+Pro_Factor  N 4.2 Y	--Factor for calculating calories from protein (see p.  13).
+Fat_Factor  N 4.2 Y	--Factor for calculating calories from fat (see p. 13).
+CHO_Factor  N 4.2 Y	--Factor for calculating calories from carbohydrate (see p. 13).
+
+usda_footnote
+NDB_No     A 5 N usda_food_des.NDB_No	--5-digit Nutrient Databank number.
+Footnt_No  A 4 N	--Sequence number. If a given footnote applies to more than one nutrient number, the same footnote number is used.  As a result, this file cannot be indexed.
+Footnt_Typ A 1 N	--Type of footnote: D = footnote adding information to the food description; M = footnote adding information to measure description; N = footnote providing additional information on a nutrient value. If the Footnt_typ = N, the Nutr_No will also be filled in
+Nutr_No    A 3 Y	--Unique 3-digit identifier code for a nutrient to which footnote applies.
+Footnt_Txt A 200 N	--Footnote text.
+
+usda_langdesc
+Factor_Code A 5* N	--The LanguaL factor from the Thesaurus. Only those codes used to factor the foods contained in the LanguaL Factor file are included in this file
+Description A 140 N	--The description of the LanguaL Factor Code from the thesaurus
+
+usda_langual
+NDB_No      A 5* N usda_food_des.NDB_No	--5-digit Nutrient Databank number that uniquely identifies a food item. If this field is defined as numeric, the leading zero will be lost.
+Factor_Code A 5* N usda_langdesc.Factor_Code	--The LanguaL factor from the Thesaurus
+
+usda_nut_data
+NDB_No        A 5* N usda_food_des.NDB_No	--5-digit Nutrient Databank number.
+Nutr_No       A 3* N usda_nutr_def.Nutr_No	--Unique 3-digit identifier code for a nutrient .
+Nutr_Val      N 10.3 N	--Amount in 100 grams, edible portion .
+Num_Data_Pts  N 5 N	--Number of data points (previously called Sample_Ct) is the number of analyses used to calculate the nutrient value. If the number of data points is 0, the value was calculated or imputed.
+Std_Error     N 8.3 Y	--Standard error of the mean. Null if cannot be calculated. The standard error is also not given if the number of data points is less than three.
+Src_Cd        A 2 N usda_src_cd.Src_Cd	--Code indicating type of data.
+Deriv_Cd      A 4 Y usda_deriv_cd.Deriv_Cd	--Data Derivation Code giving specific information on how the value is determined
+Ref_NDB_No    A 5 Y	--NDB number of the item used to impute a missing value. Populated only for items added or updated starting with SR14.
+Add_Nutr_Mark A 1 Y	--Indicates a vitamin or mineral added for fortification or enrichment. This field is populated for ready-to-eat breakfast cereals and many brand-name hot cereals in food group 8.
+Num_Studies   N 2 Y	--Number of studies.
+Min           N 10.3 Y	--Minimum value.
+Max           N 10.3 Y	--Maximum value.
+DF            N 2 Y	--Degrees of freedom.
+Low_EB        N 10.3 Y	--Lower 95% error bound.
+Up_EB         N 10.3 Y	--Upper 95% error bound.
+Stat_cmt      A 10 Y	--Statistical comments. See definitions below.
+AddMod_Date   A 10 Y	--Indicates when a value was either added to the database or last modified.
+CC            A 1 Y	--Confidence Code indicating data quality, based on evaluation of sample plan, sample handling, analytical method, analytical quality control, and number of samples analyzed. Not included in this release, but is planned for future releases.
+
+usda_nutr_def
+Nutr_No  A 3* N	--Unique 3-digit identifier code for a nutrient.
+Units    A 7 N	--Units of measure (mg, g, g, and so on).
+Tagname  A 20 Y	--International Network of Food Data Systems (INFOODS) Tagnames. A unique abbreviation for a nutrient/food component developed by INFOODS to aid in the interchange of data.
+NutrDesc A 60 N	--Name of nutrient/food component.
+Num_Dec  A 1 N	--Number of decimal places to which a nutrient value is rounded.
+SR_Order N 6 N	--Used to sort nutrient records in the same order as various reports produced from SR.
+
+usda_src_cd
+Src_Cd     A 2* N	--2-digit code.
+SrcCd_Desc A 60 N	--Description of source code that identifies the type of nutrient data.
+
+usda_weight
+NDB_No       A 5* N usda_food_des.NDB_No	--5-digit Nutrient Databank number.
+Seq          A 2* N	--Sequence number.
+Amount       N 5.3 N	--Unit modifier (for example, 1 in "1 cup").
+Msre_Desc    A 80 N	--Description (for example, cup, diced, and 1-inch pieces).
+Gm_Wgt       N 7.1 N	--Gram weight.
+Num_Data_Pts N 3 Y	--Number of data points.
+Std_Dev      N 7.3 Y	--Standard deviation.
+
+user_right
+user  INT -* N users.id
+right INT -* N right.id
+
+users
+id                INT -* N
+username          A 12 N
+password          A 40 N
+email             A 128 N
+registered        TIMESTAMP - N
+confirmation      A 40 Y
+confirmed         TIMESTAMP - Y
+active            INT - N
+timezone          A 32 Y
+birth             DATE - Y	--birth date of user
+gender            INT - Y	--female?
+pregnancy         INT - N	--0:no;1:pregnant;2:lactating
+demographic_group INT - Y demographic_group.id
