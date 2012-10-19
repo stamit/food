@@ -14,10 +14,24 @@ distribution from this URL:
 
 `usda-import.py' is a Python script that will take the `usda-sr25.txt' file (or
 any named file) and produce SQL statements for MySQL or PostreSQL that will
-create and fill the database tables. Run this script from the directory where
-you extracted the ZIP file from the above URL. For example, if you extracted
-the ZIP in directory `sr25' under this directory (doc) and you are using MySQL
-database `usda', then this should work:
+create and fill the database tables. It uses any UPPERCASE_TABLE.txt files it
+can find in the current working directory as data inputs for INSERTING:
 
 	cd sr25
-	python ../usda-import.py <../usda-sr25.txt | mysql usda
+	python ../usda-import.py ../usda-sr25.txt | mysql usda
+
+`usda-export-mysql.py' will connect to your MySQL database and output the
+schema in the same USDA format that the above script will read. This command
+will connect to MySQL on localhost, use database "food", and read from tables
+with prefix "usda_" (which it will discard):
+
+	python usda-export-mysql.py //localhost/food/usda_ >current-schema.txt
+
+If you give `usda-import.py' two schema arguments A and B, it will output the
+SQL statements for ALTERing the database tables (ADDing, MODIFYing and DROPping
+columns) so that a database with schema A will be converted to schema B. If the
+first argument is '-', it will read the first file form stdin. This way you can
+pipe the output of `usda-export-mysql.py' directly to it. For example, this
+command will 
+
+	python usda-export-mysql.py food | python usda-import.py - usda-sr25.txt | mysql food

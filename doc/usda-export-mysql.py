@@ -3,12 +3,6 @@ import MySQLdb
 import MySQLdb.connections
 import MySQLdb.cursors
 
-host = 'localhost'
-dbname = 'food'
-charset = 'utf8'
-tableprefix = 'usda_'
-#tableprefix = ''
-
 def sqlid(s):
 	return '`'+s.replace('`','``')+'`'
 
@@ -41,6 +35,29 @@ def eatprefix(x,y):
 	return x[len(y):]
 
 if __name__=='__main__':
+	if len(sys.argv)<2:
+		sys.stderr.write('symtax: %s [//HOST/]DATABASE[/PREFIX]\n')
+		sys.exit(1)
+
+	host = 'localhost'
+	charset = 'utf8'
+	tableprefix = 'usda_'
+
+	arg = sys.argv[1]
+	if arg.startswith('//'):
+		i = arg[2].find('/')
+		if i>=0:
+			host = arg[2:2+i]
+			arg = arg[2+i+1]
+
+	i = arg.find('/')
+	if i>=0:
+		tableprefix = arg[i+1:]
+		arg = arg[:i]
+
+	dbname = arg
+
+
 	db = MySQLdb.connections.Connection(host=host, db=dbname, charset=charset)
 
 	c = db.cursor()

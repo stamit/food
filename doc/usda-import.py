@@ -276,7 +276,8 @@ def print_drops(tablename,prevtables,tables,dropped):
 			if f2[4] and f2[4][0]==tablename:
 				print_drops(tablename2,prevtables,tables,dropped)
 
-	if prevtables==None:
+	if (prevtables.get(tablename)==None and tables.get(tablename)<>None) or \
+	   (prevtables.get(tablename)<>None and tables.get(tablename)==None):
 		sys.stdout.write('DROP TABLE IF EXISTS %s;\n'%sqlfield(tableprefix+tablename))
 		sys.stdout.write('\n')
 
@@ -407,13 +408,29 @@ if __name__ == '__main__':
 		tables = readschema(f)
 		f.close()
 
+	elif len(sys.argv)==4:
+		tableprefix = sys.argv[1]
+
+		if sys.argv[2]=='-':
+			prevtables = readschema(sys.stdin)
+		else:
+			f = open(sys.argv[2],'r')
+			prevtables = readschema(f)
+			f.close()
+
+		f = open(sys.argv[3],'r')
+		tables = readschema(f)
+		f.close()
+
 	else:
-		sys.stderr.write('syntax: %s [[PREVSCHEMA|-] SCHEMA]\n'%sys.argv[0])
+		sys.stderr.write('syntax: %s [[[PREFIX] {PREVSCHEMA|-}] SCHEMA]\n'%sys.argv[0])
 		sys.exit(1)
 
 	if droptables:
 		dropped={}
 		for tablename in tables:
+			print_drops(tablename,prevtables,tables,dropped)
+		for tablename in prevtables:
 			print_drops(tablename,prevtables,tables,dropped)
 
 	if writeschema:
