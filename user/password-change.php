@@ -58,7 +58,7 @@
 	</tr>
 	<tr>
 		<td colspan="2" class="buttons">
-			<?=ok_button('Change password')?>
+			<?=submit_button('Change password')?>
 		</td>
 	</tr>
 </table>

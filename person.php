@@ -3,7 +3,7 @@
 	require_once 'lib/validation.php';
 
 	$row = given('person.id', array(
-		'user_id'=>array(0,''=>null),
+		'user_id'=>0,
 		'name'=>array('',''=>null),
 		'address'=>array('',''=>null),
 		'postcode'=>array('',''=>null),
@@ -40,6 +40,9 @@
 				mistake('name','At least 4 characters.');
 			if (mb_strlen($row['name'])>64)
 				mistake('name','Up to 64 characters.');
+			if (value('COUNT(*) FROM person WHERE name='.sql($row['name'])
+			          .($row['id']?' AND id<>'.sql($row['id']):'')))
+				mistake('name','A person with this name already exists.');
 	
 			if ($row['address'] !== null) {
 				$row['address'] = trim($row['address']);
@@ -73,54 +76,83 @@
 		}
 
 		if (correct()) {
-			store('person.id',$row);
-			if (success($URL.'/persons')) return true;
+			$row['id'] = (int)store('person.id',$row);
+			if (success('?id='.urlencode($row['id']))) return true;
 		}
 	} catch (Exception $x) {
 		if (failure($x)) return false;
 	}
 
-	if ($row['id']>0) {
-		$RO = ($row['id'][0]!='+');
+	$MODE = $row['id'];
+	if (!$MODE) {
+		$HEADING = 'New person';
+		$RO = 0;
+	} else if ($MODE>0) {
 		$row = fetch('person.id',$row);
-		if (!$row) {
-			$STATUS = 404;
-			$HEADING = 'Person not found';
-		} else {
+		if ($row) {
 			$HEADING = 'Person '.html($row['name']);
+			$RO = ($MODE[0]!='+');
+		} else {
+			$STATUS = 404;
+			$HEADING = 'Person does not exist';
+			$RO = -1;
 		}
 	} else {
-		$HEADING = 'New person';
+		$row = fetch('person.id',-$row['id']);
+		if ($row) {
+			$HEADING = 'Delete person '.html($row['name']).'?';
+			$RO = 1;
+		} else {
+			$HEADING = 'Person deleted';
+			$RO = -1;
+		}
 	}
 ?>
 <? include 'app/begin.php' ?>
 
-<? begin_form() ?>
+<? if ($RO>=0) { begin_form(); ?>
 <table class="fields">
 <? if (has_right('admin')) { ?>
-	<tr><th>USER ID:</th><td><?=number_input('user_id',$row,null,$RO)?></td></tr>
+	<tr class="noprint"><th>USER ID:</th><td><?=number_input('user_id',$row,null,$RO)?></td></tr>
 <? } ?>
+	<? if (!$RO) { ?>
 	<tr><th>Name Sn:</th><td><?=input('name',$row,array(48,64),$RO)?></td></tr>
+	<? } ?>
 	<tr><th>Address:</th><td><?=textarea('address',$row,48,3,$RO)?></td></tr>
-	<tr><th>Zip code:</th><td><?=input('postcode',$row,6,$RO)?></td></tr>
+	<tr><th>Post code:</th><td><?=input('postcode',$row,6,$RO)?></td></tr>
 	<tr><th>P.O. box:</th><td><?=input('postbox',$row,6,$RO)?></td></tr>
 	<tr><th>Phone:</th><td><?=input('phone',$row,16,$RO)?></td></tr>
 	<tr><th>Phone:</th><td><?=input('phone2',$row,16,$RO)?></td></tr>
 	<tr><th>FAX:</th><td><?=input('fax',$row,16,$RO)?></td></tr>
 	<tr><th>Email:</th><td><?=input('email',$row,array(24,127),$RO)?></td></tr>
 	<tr><th>Website:</th><td><?=input('website',$row,array(32,127),$RO)?></td></tr>
-	<? if (!$OPTION) { ?>
-	<tr><th>Notes:</th><td><?=textarea('notes',$row,64,10,$RO)?></td></tr>
+	<? if (!$RO || $row['notes']!==null) { ?>
+	<tr><th>Notes:</th><td><?= $RO
+		? '<pre>'.html($row['notes']).'</pre>'
+		: textarea('notes',$row,64,10,$RO)
+	?></td></tr>
 	<? } ?>
 
 <? if (has_right('register-persons')) { ?>
 	<tr><td colspan="2" class="buttons">
-		<?=ok_button('Save')?>
+		<? if ($MODE<0) { ?>
+			<?=submit_button('Delete')?>
+			<?=link_button('Keep',array('id'=>$row['id']),'cancel')?>
+		<? } else if ($RO) { ?>
+			<?=link_button('Edit',array('id'=>'+'.$row['id']),'edit')?>
+			<?=link_button('Delete',array('id'=>-$row['id']),'delete')?>
+		<? } else if ($MODE>0) { ?>
+			<?=submit_button('Save')?>
+			<?=link_button('Cancel',array('id'=>(int)$row['id']),'cancel')?>
+		<? } else { ?>
+			<?=submit_button('Save')?>
+		<? } ?>
 	</td></tr>
 <? } ?>
 </table>
+<? end_form(); } ?>
 
-<? if ($row['id']>0) { ?>
+<? if ($RO>0) { ?>
 <h3>Products</h3>
 <? include 'person-products.php' ?>
 <h3>Imports</h3>
@@ -131,5 +163,4 @@
 <? include 'person-stores.php' ?>
 <? } ?>
 
-<? end_form() ?>
 <? include 'app/end.php' ?>

@@ -30,7 +30,7 @@
 				'width'=>'140px',
 			),
 */
-			'person.website'=>array('Website',
+			'person.website'=>array('Website', 'website_html',
 				'search'=>'mid',
 				'width'=>'120px',
 			),

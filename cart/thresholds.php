@@ -185,7 +185,7 @@
 		<? } else { ?>
 		<td colspan="4" class="buttons">
 		<? } ?>
-			<?=ok_button('Save')?>
+			<?=submit_button('Save')?>
 		</td>
 	</tr>
 </table>

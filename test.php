@@ -89,7 +89,7 @@
 
 <? if (has_right('register-persons')) { ?>
 	<tr><td colspan="2" class="buttons">
-		<?=ok_button('Register')?>
+		<?=submit_button('Save')?>
 	</td></tr>
 <? } ?>
 </table>

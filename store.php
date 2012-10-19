@@ -41,57 +41,107 @@
 			validate_telephone($row['fax'],'fax',$COUNTRY_CODE);
 	
 		if (correct()) {
-			store('store.id',$row);
-			if (success($URL.'/stores')) return true;
+			$row['id'] = (int)store('store.id',$row);
+			if (success('?'.queryencode(array('id'=>$row['id'])))) return true;
 		}
 	} catch (Exception $x) {
 		if (failure($x)) return false;
 	}
 
-	if ($row['id']>0) {
-		$row = row('* FROM store WHERE id='.sql($row['id']));
-		$HEADING = 'Store "'.html($row['name']).'"';
-	} else {
+	$MODE = $row['id'];
+	if (!$MODE) {
 		$HEADING = 'New store';
+		$RO = 0;
+	} else if ($MODE>0) {
+		$row = fetch('store.id',$row);
+		if ($row) {
+			$HEADING = 'Store '.html($row['name']);
+			$RO = ($MODE[0]!='+');
+		} else {
+			$STATUS = 404;
+			$HEADING = 'Store does not exist';
+			$RO = -1;
+		}
+	} else {
+		$row = fetch('store.id',-$row['id']);
+		if ($row) {
+			$HEADING = 'Delete store '.html($row['name']).'?';
+			$RO = 1;
+		} else {
+			$HEADING = 'Store deleted';
+			$RO = -1;
+		}
 	}
 ?>
 <? include 'app/begin.php' ?>
 
-<? begin_form() ?>
+<? if ($RO>=0) { begin_form(); ?>
 <table class="fields">
-	<tr><th class="left">Owner:</th><td><?
-		print dropdown('owner',$row,
-			select('id AS value, name AS text'
-			       .' FROM person ORDER BY name'),
-		0, array('','(unknown)'));
-	?></td></tr>
-	<tr><th class="left">Name of store:</th><td><?
-		print input('name',$row,array(32,64));
-	?></td></tr>
-	<tr><th class="left top">Address of store:</th><td><?
-		print textarea('address',$row,48,3);
-	?></td></tr>
-	<tr><th class="left">Zip code:</th><td><?
-		print input('postcode',$row,6);
-	?></td></tr>
-	<tr><th class="left">Phone:</th><td><?
-		print input('phone',$row,16);
-	?></td></tr>
-	<tr><th class="left">Phone:</th><td><?
-		print input('phone2',$row,16);
-	?></td></tr>
-	<tr><th class="left">FAX:</th><td><?
-		print input('fax',$row,16);
-	?></td></tr>
-	<tr><th class="left">Notes:</th><td><?
-		print textarea('notes',$row,64,6);
-	?></td></tr>
-<? if (has_right('register-persons')) { ?>
+	<tr>
+		<th class="left">Owner:</th>
+		<td><?=person_select_html('owner',$row,$RO,'(unknown)')?></td>
+	</tr>
+	<tr>
+		<th class="left">Name of store:</th>
+		<td><?=input('name',$row,array(32,64),$RO)?></td>
+	</tr>
+	<tr>
+		<th class="left top">Address of store:</th>
+		<td><?=textarea('address',$row,48,3,$RO)?></td>
+	</tr>
+
+	<? if (!$RO || $row['postcode']) { ?>
+	<tr>
+		<th class="left">Post code:</th>
+		<td><?=input('postcode',$row,6,$RO)?></td>
+	</tr>
+	<? } ?>
+
+	<? if (!$RO || $row['phone']) { ?>
+	<tr>
+		<th class="left">Phone:</th>
+		<td><?=input('phone',$row,16,$RO)?></td>
+	</tr>
+	<? } ?>
+
+	<? if (!$RO || $row['phone2']) { ?>
+	<tr>
+		<th class="left">Phone:</th>
+		<td><?=input('phone2',$row,16,$RO)?></td>
+	</tr>
+	<? } ?>
+
+	<? if (!$RO || $row['fax']) { ?>
+	<tr>
+		<th class="left">FAX:</th>
+		<td><?=input('fax',$row,16,$RO)?></td>
+	</tr>
+	<? } ?>
+
+	<? if (!$RO || $row['notes']!==null) { ?>
+	<tr>
+		<th class="left">Notes:</th>
+		<td><?=textarea('notes',$row,64,6,$RO)?></td>
+	</tr>
+	<? } ?>
+
+<? if (has_right('register-stores')) { ?>
 	<tr><td colspan="2" class="buttons">
-		<?=ok_button('Register')?>
+		<? if ($MODE<0) { ?>
+			<?=submit_button('Delete')?>
+			<?=link_button('Keep',array('id'=>$row['id']),'cancel')?>
+		<? } else if ($RO) { ?>
+			<?=link_button('Edit',array('id'=>'+'.$row['id']),'edit')?>
+			<?=link_button('Delete',array('id'=>-$row['id']),'delete')?>
+		<? } else if ($MODE>0) { ?>
+			<?=submit_button('Save')?>
+			<?=link_button('Cancel',array('id'=>(int)$row['id']),'cancel')?>
+		<? } else { ?>
+			<?=submit_button('Save')?>
+		<? } ?>
 	</td></tr>
 <? } ?>
 </table>
-<? end_form() ?>
+<? end_form(); } ?>
 
 <? include 'app/end.php' ?>

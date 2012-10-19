@@ -95,7 +95,7 @@ to log out, <a href="<?=html($URL.'/user/logout')?>">click here</a>.</p>
 		<td colspan="2" class="buttons">
 			<?=checkbox('remember_me',false,'Lasting session')?>
 			&nbsp;
-			<?=ok_button('Log in')?>
+			<?=submit_button('Log in')?>
 		</td>
 	</tr>
 </table>

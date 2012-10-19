@@ -21,7 +21,7 @@
 		'columns'=>array(
 			'receipt.issued'=>array('Date/time',
 				'search'=>'mid',
-				'width'=>'110px',
+				'width'=>'11.5em',
 			),
 			'receipt.amount'=>array('Amount',
 				'class'=>'number',

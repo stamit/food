@@ -81,7 +81,7 @@
 	?></td></tr>
 
 	<tr><td colspan="2" class="buttons">
-		<?=ok_button('Save')?>
+		<?=submit_button('Save')?>
 	</td></tr>
 </td></tr></table>
 <?php end_form() ?>

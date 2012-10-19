@@ -52,7 +52,7 @@ function sql($x, $db=null) {
 		}
 		return '('.implode(',',$z).')';
 	} else {
-		throw new LoggedException('cannot represent value as SQL: '.repr($x));
+		throw new Exception('cannot represent value as SQL: '.repr($x));
 	}
 }
 function qstrr(&$x, $db=null) {  # for strings only (takes reference)
@@ -193,7 +193,7 @@ function select($sql, $limit=null, $offset=null, $db=null) {
 	}
 
 	if ($set === FALSE)
-		throw new LoggedException($db->ErrorMsg());
+		throw new Exception($db->ErrorMsg());
 
 	while (!$set->EOF) {
 		$results[] = $set->fields;
@@ -209,15 +209,15 @@ function value0($sql, $db=null) {
 
 	$results = select($sql, 2, 0, $db);
 	if (count($results) > 1)
-		throw new LoggedException("query gives more than one result: ".$sql);
+		throw new Exception("query gives more than one result: ".$sql);
 	if (!count($results))
 		return null;
 
 	$row = $results[0];
 	if (count($row) < 1)
-		throw new LoggedException("query returned record with no fields: ".$sql);
+		throw new Exception("query returned record with no fields: ".$sql);
 	if (count($row) > 1)
-		throw new LoggedException("query returned record with more than one field: ".$sql);
+		throw new Exception("query returned record with more than one field: ".$sql);
 	foreach ($row as $a)
 		return $a;
 
@@ -230,9 +230,9 @@ function value1($sql, $db=null) {
 
 	$row = row1($sql, $db);
 	if (count($row) < 1)
-		throw new LoggedException("query returned record with no fields: ".$sql);
+		throw new Exception("query returned record with no fields: ".$sql);
 	if (count($row) > 1)
-		throw new LoggedException("query returned record with more than one field: ".$sql);
+		throw new Exception("query returned record with more than one field: ".$sql);
 	foreach ($row as $a)
 		return $a;
 	return null;
@@ -244,9 +244,9 @@ function value($sql,$db=null) {
 
 	$x = row($sql,$db);
 	if (count($x) < 1)
-		throw new LoggedException("query returned record with no fields: ".$sql);
+		throw new Exception("query returned record with no fields: ".$sql);
 	if (count($x) > 1)
-		throw new LoggedException("query returned record with more than one field: ".$sql);
+		throw new Exception("query returned record with more than one field: ".$sql);
 	foreach ($x as $a) $y = $a;
 	return $y;
 }
@@ -257,7 +257,7 @@ function row0($sql, $db=null) {
 
 	$results = select($sql, 2, 0, $db);
 	if (count($results) > 1)
-		throw new LoggedException("query gives more than one result: ".$sql);
+		throw new Exception("query gives more than one result: ".$sql);
 	return (count($results)>0) ? $results[0] : null;
 }
 
@@ -267,7 +267,7 @@ function row1($sql, $db=null) {
 
 	$results = select($sql, 1, 0, $db);
 	if (!count($results))
-		throw new LoggedException("query gives no results: ".$sql);
+		throw new Exception("query gives no results: ".$sql);
 	return $results[0];
 }
 
@@ -277,9 +277,9 @@ function row($sql,$db=null) {
 
 	$results = select($sql, 2, 0, $db);
 	if (!count($results))
-		throw new LoggedException("query gives no results: ".$sql);
+		throw new Exception("query gives no results: ".$sql);
 	if (count($results) > 1)
-		throw new LoggedException("query gives more than one result: ".$sql);
+		throw new Exception("query gives more than one result: ".$sql);
 	return $results[0];
 }
 
@@ -291,9 +291,9 @@ function col($sql, $db=null) {
 	for ($i = 0 ; $i < count($xs) ; ++$i) {
 		$row = $xs[$i];
 		if (count($row) < 1)
-			throw new LoggedException("query returned record with no fields: ".$sql);
+			throw new Exception("query returned record with no fields: ".$sql);
 		if (count($row) > 1)
-			throw new LoggedException("query returned record with more than one field: ".$sql);
+			throw new Exception("query returned record with more than one field: ".$sql);
 		foreach ($row as $a) $xs[$i] = $a;
 	}
 	return $xs;
@@ -321,7 +321,7 @@ function execute($sql, $db=null) {
 
 	$set = $db->Execute($sql);
 	if ($set === FALSE)
-		throw new LoggedException($db->ErrorMsg());
+		throw new Exception($db->ErrorMsg());
 
 	return $db->Affected_Rows();
 }
@@ -362,8 +362,11 @@ function update($tablekeys, $row, $db=null) {
 		throw new Exception('no table specified');
 
 	$assignments = array();
-	foreach ($row as $field=>$value) if ($field!=$id_field) {
-		$assignments[] = sqlid($field).'='.sql($value,$db);
+	foreach ($row as $field=>$value) {
+		$i = array_search($field,$words);
+		if ($i===FALSE || $i<1) {
+			$assignments[] = sqlid($field).'='.sql($value,$db);
+		}
 	}
 	if (!$assignments) return 0;
 
@@ -390,8 +393,9 @@ function delete($tablekeys, $row, $db=null) {
 	execute($sql,$db);
 }
 
-# works with the result of `given', after validation and possible corrections
-# by you
+# ID of inserted, updated or deleted table.id $tablekeys row, from operation
+# described by $row (zero ID value means insert, positive ID value means update
+# and negative ID value means delete)
 function store($tablekeys, $row, $db=null) {
 	global $DB; if ($db === null) $db = $DB;
 	global $REQUEST_ID;
@@ -408,13 +412,14 @@ function store($tablekeys, $row, $db=null) {
 			$id = insert($table, $row, $db);
 		} else if ( $row[$key] > 0) {
 			$id = $row[$key];
-			update($table.'.'.$key, $row, $db);
+			update($tablekeys, $row, $db);
 		} else {
 			$id = -$row[$key];
-			delete($table.'.'.$key, $id, $db);
+			delete($tablekeys, $id, $db);
+			$id = $row[$key];
 		}
 	} else {
-		throw new Exception('not implemented');
+		update($tablekeys, $row, $db);
 	}
 
 	insert('log_database',array(

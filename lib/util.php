@@ -124,9 +124,11 @@ function v($name) {
 	return ($_POST[$name]!==null) ? $_POST[$name] : $_GET[$name];
 }
 
-function posting() {
+function posting($name=null) {
 	global $METHOD;
-	if (count($_POST)>0) {
+	if ($name!==null) {
+		return ($_POST[$name]!==null);
+	} else if (count($_POST)>0) {
 		foreach ($_POST as $a=>$b) {
 			if (!startswith($a,'__')) {
 				return true;
@@ -149,14 +151,18 @@ function mistake($a, $b=null) {
 		}
 	}
 }
+# throws exception in case of mistake, to be caught and passed to failure()
 function correct() {
 	global $MISTAKES, $INLINE_REQUEST;
-	if (!count($MISTAKES)) {
-		return true;
-	} else if ($INLINE_REQUEST) {
-		# exception caught and passed to failure()
-		throw new Exception('');
+	if (count($MISTAKES)) {
+		if ($INLINE_REQUEST) {
+			# exception caught and passed to failure()
+			throw new Exception('');
+		} else {
+			return false;
+		}
 	}
+	return true;
 }
 function success($redir=null,$id=null) {
 	global $ENCODING, $INLINE_REQUEST;
@@ -720,17 +726,15 @@ function button($html, $onclick) {
 	.'</button>';
 }
 
-function ok_button($label='OK', $following_url='', $id=null) {
-	global $POPUP, $ID;
-	if (strlen($POPUP)) {
-		# form shown as pop-up
-		$js = 'return close_popup('.js($POPUP).',true);';
-	} else {
-		if (!$following_url) $following_url = $_SERVER['HTTP_REFERER'];
-		$js = 'return post_form('.js($ID).')';
-	}
-	return '<button type="submit" onclick="'.html($js).'"'
-	             .' class="button ok">'.$label.'</button>';
+function submit_button($label='OK', $name=null, $value=null, $class=null) {
+	global $ID;
+	return '<button type="submit"'
+	             .' onclick="'.html('return post_form('.js($ID).','.js($name).','.js($value).')').'"'
+	             .' class="button'.html($class===null?' ok':' '.$class).'">'.$label.'</button>';
+}
+function link_button($label, $args=null, $class=null) {
+	return '<a class="button'.($class!=null ? ' '.html($class) : '').'"'
+	        .' href="?'.html(mutate($args)).'">'.$label.'</a>';
 }
 
 
@@ -1044,28 +1048,6 @@ function mutate_deep_rec($new,$stack,$i,$old) {
 	}
 	return $result;
 }
-
-
-################################################################################
-
-
-class LoggedException extends Exception {
-	function __construct($msg) {
-		Exception::__construct($msg);
-		$x = 0;
-		$bt = debug_backtrace();
-		for ($i = 0 ; $i < count($bt) ; ++$i) {
-			$stack_frame = $bt[$i];
-			$fun = ($bt[$i+1]['function'] ? $bt[$i+1]['function'].':' : '');
-			if ($x == 0) {
-				error_log($stack_frame['file'].':'.$stack_frame['line'].':'.$fun.' '.$msg);
-			} else if ($x > 0) {
-				error_log($stack_frame['file'].':'.$stack_frame['line'].':'.$fun.' called from here');
-			}
-			++$x;
-		}
-	}
-};
 
 
 ?>

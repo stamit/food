@@ -108,7 +108,7 @@ function validate_post(id,x,y,z) {
 		}
 	});
 }
-function post_form(id,button_id) {
+function post_form(id,name,value) {
 	if ( ! validate(id, true) )
 		return false;
 
@@ -117,12 +117,8 @@ function post_form(id,button_id) {
 	var url = el.action;
 	var postdata = formdata(el);
 
-	if (button_id!=null) {
-		var btn = elem(button_id);
-		var btn_name = attribute(btn,'name');
-		if (btn_name!=null) {
-			postdata[btn_name] = btn.value;
-		}
+	if (name!=null && value!=null) {
+	       postdata[name] = value;
 	}
 
 	if (method == 'post') {

@@ -1,7 +1,7 @@
 <? $AUTH=true;
 	require_once 'app/init.php';
 
-	$proto = array(
+	$row = given('product.id', array(
 		'maker'=>array(0,''=>null),
 		'packager'=>array(0,''=>null),
 		'importer'=>array(0,''=>null),
@@ -25,24 +25,11 @@
 		'glaze_weight'=>array(0.0,''=>null),
 		'net_weight'=>array(0.0,''=>null),
 		'net_volume'=>array(0.0,''=>null),
-		'sample_weight'=>array(0.0,''=>null),
-		'sample_volume'=>array(0.0,''=>null),
-		'refuse_weight'=>array(0.0,''=>null),
-		'refuse_volume'=>array(0.0,''=>null),
-	);
-	foreach (col('name FROM nutrient WHERE basetable') as $name)
-		$proto[$name] = array(0.0,''=>null);
-	$row = given('product.id', $proto);
-	$old = fetch('product.id',$row['id']);
+	));
 
-	if ($row['id']!==null) {
-		$disabled = !($old['user_id']===null ||
-		              $old['user_id']==$_SESSION['user_id'] ||
-		              has_right('admin') );
-	} else {
-		$disabled = false;
-	}
-
+	//
+	// if creating new food, merge nutrient values from parent
+	//
 	if ($row['id']===null && $row['parent']!==null) {
 		$row2 = row0('* FROM product'
 		             .' WHERE id='.sql($row['parent']));
@@ -65,12 +52,25 @@
 		}
 	}
 
-	if (posting()) try {
-		if (!has_right('register-products'))
-			mistake('You are not allowed to register products.');
+	$old = fetch('product.id', $row['id']);
+	$own_record = ($row['id']===null) ||
+	              ( $old['user_id']!==null
+	                && $old['user_id']==$_SESSION['user_id'] ) || 
+	              has_right('admin');
 
-		if ($disabled)
-			mistake('You are not allowed to edit to this record.');
+	if (posting('calc_typicals')) {
+		try {
+			product_calc_typicals($row['id']);
+			if (success('?id='.urlencode($row['id']))) return true;
+		} catch (Exception $x) {
+			if (failure($x)) return false;
+		}
+
+	} else if (posting()) try {
+		if (!has_right('register-products'))
+			throw Exception('you are not allowed to register products');
+		if (!$own_record)
+			throw Exception('you are not allowed to edit this record');
 
 		$row['user_id'] = $_SESSION['user_id'];
 
@@ -120,14 +120,6 @@
 			mistake('net_weight', 'Must not be negative.');
 		if ($row['net_volume']!==null && $row['net_volume']<0)
 			mistake('net_volume', 'Must not be negative.');
-		if ($row['sample_weight']!==null && $row['sample_weight']<0)
-			mistake('sample_weight', 'Must not be negative.');
-		if ($row['sample_volume']!==null && $row['sample_volume']<0)
-			mistake('sample_volume', 'Must not be negative.');
-		if ($row['refuse_weight']!==null && $row['refuse_weight']<0)
-			mistake('refuse_weight', 'Must not be negative.');
-		if ($row['refuse_volume']!==null && $row['refuse_volume']<0)
-			mistake('refuse_volume', 'Must not be negative.');
 
 		$sdm = ( $_POST['store_duration_months']!==null
 		         && $_POST['store_duration_months']!=='' )
@@ -135,19 +127,6 @@
 			: null;
 		if ($sdm!==null) {
 			$row['store_duration'] += 30*$sdm;
-		}
-
-		if ($row['fats_saturated'] + $row['fats_monounsaturated']
-		    + $row['fats_polyunsaturated'] > $row['fats']) {
-			mistake('fats','Sum of saturated, monounsaturated and polyunsaturated fats is larger than '.$row['fats'].'g.');
-		} else if ($row['fats']===0.0) {
-			$row['fats_saturated'] = 0;
-			$row['fats_monounsaturated'] = 0;
-			$row['fats_polyunsaturated'] = 0;
-			$row['fats_polyunsaturated_n9'] = 0;
-			$row['fats_polyunsaturated_n6'] = 0;
-			$row['fats_polyunsaturated_n3'] = 0;
-			$row['fats_trans'] = 0;
 		}
 
 		if ($row['id']!==null) {
@@ -161,97 +140,47 @@
 			}
 		}
 
-		foreach (select('* FROM nutrient') as $nut)
-		if ($POST[$nut['name']]!==null) {
-			if ($row['sample_weight']===null
-			    && $row['sample_volume']===null) {
-			    	mistake('sample_weight',
-			    	        'You gave nutrient information without a sample weight.');
-				break;
-			}
-			break;
-		}
-
 		if (correct()) {
 			$row['id'] = store('product.id',$row);
-
-			foreach (select('* FROM nutrient') as $nut)
-			if (array_key_exists($nut['name'],$_POST)) {
-				$pn = row0('* FROM product_nutrient'
-				           .' WHERE product='.sql($row['id'])
-				           .' AND nutrient='.sql($nut['id']));
-				$value = $_POST[$nut['name']]=='' ? null
-				         : floatval($_POST[$nut['name']]);
-				if ($pn!==null) {
-					if ($value===null) {
-						execute('DELETE FROM product_nutrient'
-						        .' WHERE id='.sql($pn['id']));
-					} else if ($pn['value']!=$value) {
-						execute('UPDATE product_nutrient'
-						        .' SET value='.sql($value)
-						           .', source=0, id2=NULL'
-						        .' WHERE id='.$pn['id']);
-					}
-				} else if ($value !== null) {
-					insert('product_nutrient',array(
-						'product'=>$row['id'],
-						'nutrient'=>$nut['id'],
-						'value'=>$value,
-					));
-				}
-				product_nutrient_on_change(
-					$row['id'],
-					$nut['id'],
-					$value
-				);
-			}
-
-			$s = null;
-			if ($_POST['calc_typicals']) {
-				product_calc_typicals($row['id']);
-			} else if ($_POST['fooddb_import']) {
-				product_fooddb_import($row['id'],
-					intval($_POST['fooddb_source'])
-				);
-			} else if ($_POST['fooddb_clear']) {
-				product_clearlink($row['id'],3);
-			} else if ($_POST['parent_link']) {
-				product_parent_link($row['id'],
-					$row['parent']
-				);
-			} else if ($_POST['parent_clear']) {
-				product_clearlink($row['id'],1);
-			} else if ($_POST['children_link']) {
-				product_children_link($row['id']);
-			} else if ($_POST['children_clearlink']) {
-				product_clearlink($row['id'],2);
-			} else if ($row['type']==1) {
-				$s = success($URL.'/foods',$row['id']);
-			} else {
-				$s = success($URL.'/products',$row['id']);
-			}
-			if ($s === null) {
-				$s = success($URL.'/product?id='.$row['id'],$row['id']);
-			}
-			if ($s) return true;
+			if (success('?id='.urlencode($row['id']))) return true;
 		}
 	} catch (Exception $x) {
 		if (failure($x)) return false;
 	}
 
-	if ($row['id']>0) {
-		$row = row('* FROM product WHERE id='.sql($row['id']));
-		$owner = row0('* FROM person WHERE id='.sql($row['owner']));
-		$HEADING = 'Product "'.html($row['name']).($owner ? ' ('.$owner['name'].')' : '').'"';
-	} else {
-		$HEADING = 'New product';
-	}
 	if ($row['type']==1) {
-		$HEADING .= ' (foods)';
+		$type = 'food';
 	} else if ($row['type']==2) {
-		$HEADING .= ' (consumables)';
+		$type = 'consumable';
 	} else {
-		$HEADING .= ' (miscellaneous)';
+		$type = 'product';
+	}
+
+	$MODE = $row['id'];
+	if (!$MODE) {
+		$HEADING = 'New '.$type;
+		$RO = 0;
+	} else if ($MODE>0) {
+		$row = fetch('product.id',$row);
+		if ($row) {
+			$owner = row0('* FROM person WHERE id='.sql($row['owner']));
+			$HEADING = html($row['name'])
+			           .($owner ? ' ('.$owner['name'].')' : '');
+			$RO = ($MODE[0]!='+');
+		} else {
+			$STATUS = 404;
+			$HEADING = 'Person does not exist';
+			$RO = -1;
+		}
+	} else {
+		$row = fetch('product.id',-$row['id']);
+		if ($row) {
+			$HEADING = 'Delete '.$type.' '.html($row['name']).'?';
+			$RO = 1;
+		} else {
+			$HEADING = 'Product deleted';
+			$RO = -1;
+		}
 	}
 
 	if ($row['store_duration']!==null && $row['store_duration']!=='') {
@@ -259,221 +188,273 @@
 			intval($row['store_duration']/30);
 		$row['store_duration'] -= 30*$row['store_duration_months'];
 	}
+
+
+	if ($RO && $MODE>0) {
+		$np=value('COUNT(*) FROM receipt'
+			  .' WHERE product='
+			  .sql($row['id'])
+			  .' AND user_id='
+			  .$_SESSION['user_id']);
+		if ($np>0) {
+			$HEADING .= '<span class="noprint">';
+			$HEADING .= ' - <a href="'.html('purchases?prodid='.$row['id']).'">'.($np==1?$np.' purchase':$np.' purchases').'</a>';
+			$HEADING .= '</span>';
+		}
+	}
 ?>
 <? include 'app/begin.php' ?>
 <? include_script('product-script.js') ?>
 <? begin_form($URL.'/product'.($row['id']?'?id='.$row['id']:'')) ?>
 <?=hidden('id',$row['id'])?>
 
-<table class="layout">
-	<tr><td>
+<table class="fields">
+	<tr<?=$row['parent']?'':' class="noprint"'?>><th>Parent:</th><td>
+		<?= $RO
+			? ( $row['parent']
+				?'<a href="'.html('product?id='.urlencode($row['parent'])).'">'
+					.value0('name FROM product WHERE id='.sql($row['parent']))
+				.'</a>'
+				: '(no parent)'
+			)
+			: dropdown('parent',$row,
+			           select('id AS value, name AS text FROM product'
+			                  .($row['id']?' WHERE id<>'.sql($row['id']):'')
+			                  .' ORDER BY name'),
+			           $RO, array('','(root product)'))
+		?>
+	</td></tr>
 
-		<table class="fields">
-			<tr><th>Barcode:</th><td>
-				<?=input('barcode',$row,13,$disabled)?>
+	<tr><th>Variations:</th><td><?
+		$j = 0;
+		foreach (select('id,name FROM product WHERE parent='.sql($row['id'])) as $i=>$x) {
+			if ($j) echo '<br />';
+			$j = 1;
+			if ($RO) {
+				echo '<a href="product?id='.html(urlencode($x['id'])).'">'
+					.html($x['name'])
+				.'</a>';
+			} else {
+				echo html($x['name']);
+			}
+		}
+		if (!$j) {
+			echo '(none)';
+		}
+		if ($RO) {
+			echo '<span class="noprint">';
+			echo '<br />';
+			echo '<a href="'.html('?parent='.$row['id']).'">New variation</a>';
+			echo '</span>';
+		}
+	?></td></tr>
+</table>
 
-				<? if ($row['id']) {
-					$np=value('COUNT(*) FROM receipt'
-					          .' WHERE product='
-					          .sql($row['id'])
-					          .' AND user_id='
-					          .$_SESSION['user_id']);
-					if ($np>0) {
-						echo ' <a href="'.html('purchases?prodid='.$row['id']).'">'.($np==1?$np.' purchase':$np.' purchases').'</a>';
-					}
-				} ?>
-			</td></tr>
+<table class="fields">
+	<? if ($RO) { ?>
+	<? if ($row['barcode']!==null) { ?>
+	<tr><th>B/C:</th><td>
+		<?=input('barcode',$row,13,$RO)?>
+	</td></tr>
+	<? } ?>
+	<? } else { ?>
+	<tr><th>Name:</th><td>
+		<?=input('name',$row,array(40,64),$RO)?>
 
-			<tr><th>Name:</th><td>
-				<?=input('name',$row,array(40,64),$disabled)?>
+		<? if ($row['type']!==null) {
+			print hidden('type',$row);
+		} else {
+			print ' ';
+			print dropdown('type',$row,array(
+				array('1','Foods'),
+				array('2','Consumables'),
+				array('3','Miscellaneous'),
+			),$RO);
+		}?>
 
-				<? if ($row['type']!==null) {
-					print hidden('type',$row);
-				} else {
-					print ' ';
-					print dropdown('type',$row,array(
-						array('1','Foods'),
-						array('2','Expendables'),
-						array('3','Miscellaneous'),
-					),$disabled);
-				}
-				if ($row['id']) {?>
-					<a href="<?=html('?parent='.$row['id'])?>">New variation</a>
-				<?}?>
-			</td></tr>
+		<b>B/C:</b>
 
-			<tr><th>Manufacturer:</th><td>
-				<?=dropdown('maker',$row,
-				            select('id AS value, name AS text'
-				                   .' FROM person ORDER BY name'),
-				            $disabled, array('','(anyone or unknown)'))?>
+		<?=input('barcode',$row,13,$RO)?>
+	</td></tr>
+	<? } ?>
 
-				<? if ($row['maker']) {
-					print ' <a href="'.html('person?id='.urlencode($row['maker'])).'"><img src="app/link.png" alt="go" class="icon"></a>';
-				} ?>
-			</td></tr>
+	<? if (!$RO || $row['maker']) { ?>
+	<tr><th>Manufacturer:</th><td><?= person_select_html('maker',$row,$RO,'(anyone or unknown)') ?></td></tr>
+	<? } ?>
 
-			<tr><th>Packager:</th><td>
-				<?=dropdown('packager',$row,
-				            select('id AS value, name AS text'
-				                   .' FROM person ORDER BY name'),
-				            $disabled, array('','(anyone or unknown)'))?>
+	<? if (!$RO || $row['packager']) { ?>
+	<tr><th>Packager:</th><td><?= person_select_html('packager',$row,$RO,'(anyone or unknown)') ?></td></tr>
+	<? } ?>
 
-				<? if ($row['packager']) {
-					print ' <a href="'.html('person?id='.urlencode($row['packager'])).'"><img src="app/link.png" alt="go" class="icon"></a>';
-				} ?>
-			</td></tr>
+	<? if (!$RO || $row['importer']) { ?>
+	<tr><th>Importer:</th><td><?= person_select_html('importer',$row,$RO,'(anyone or unknown)') ?></td></tr>
+	<? } ?>
 
-			<tr><th>Importer:</th><td>
-				<?=dropdown('importer',$row,
-				            select('id AS value, name AS text'
-				                   .' FROM person ORDER BY name'),
-				            $disabled,
-				            array('', '(anyone or unknown or local product)'))?>
-				
-				<? if ($row['importer']) {
-					print ' <a href="'.html('person?id='.urlencode($row['importer'])).'"><img src="app/link.png" alt="go" class="icon"></a>';
-				} ?>
-			</td></tr>
+	<? if (!$RO || $row['distributor']) { ?>
+	<tr><th>Distributor:</th><td><?= person_select_html('distributor',$row,$RO,'(anyone or unknown)') ?></td></tr>
+	<? } ?>
 
-			<tr><th>Distributor:</th><td>
-				<?=dropdown('distributor',$row,
-				            select('id AS value, name AS text'
-				                   .' FROM person ORDER BY name'),
-				            $disabled, array('','(anyone or unknown)'))?>
-				<? if ($row['distributor']) {
-					print ' <a href="'.html('person?id='.urlencode($row['distributor'])).'"><img src="app/link.png" alt="go" class="icon"></a>';
-				} ?>
-			</td></tr>
-
-			<tr><th>Typical price:</th><td>
-				<?=number_input('typical_price',$row,null,
-				                $disabled).'€'?>
-				&nbsp;
-				<?=checkbox('price_to_parent',$row,
-				            'affects parent',$disabled)?>
-				&nbsp;
-				<?=checkbox('price_no_children',$row,
-				            'does not affect children',$disabled)?>
-				&nbsp;
-				<?=checkbox('price_no_recalc',$row,
-				            'do not recalculate price',$disabled)?>
-				&nbsp;
-				<button id="<?=html($ID.'_calc_typicals')?>"
-					type="submit"
-					onclick="<?=html('return post_form('
-						.js($ID).','
-						.js($ID.'_calc_typicals')
-					.')')?>"
-					name="calc_typicals" value="1"
-					<?=$disabled?' disabled="disabled"':''?>
-				>Recalculate</button>
-			</td></tr>
-
-			<tr><th>Units:</th><td>
-				<?=number_input('typical_units',$row,null,
-				                $disabled)?>
-
-				<? if ($row['type']!=3 || $row['type']===null) { ?>
-					units, packages, rations or pairs
-				<? } else { ?>
-					units, packages or pairs
-				<? } ?>
-				&nbsp;
-				<? if ($row['type']!=3 || $row['type']===null) { ?>
-					<?=checkbox('units_avoid_filling',$row,
-					            'avoid filling units field',$disabled)?>
-					<?=checkbox('units_near_kg',$row,
-					            'prefer round kg quantities',$disabled)?>
-				<? } ?>
-			</td></tr>
-
-			<tr><th><?
-				if ($row['type']!=3 || $row['type']===null) {
-					echo 'Net weight:';
-				} else {
-					echo 'Weight:';
-				}
-			?></th><td><?
-				if ($row['type']!=3 || $row['type']===null) {
-					echo '℮ ';
-				}
-				echo number_input('net_weight',$row,null,
-				                  $disabled).'g';
-				if ($row['type']!=3 || $row['type']===null) {
-					print ' + <strong>glaze</strong> ';
-					print number_input('glaze_weight',
-					                   $row,null,
-					                   $disabled).'g';
-					print ' &nbsp; ( + packaging weight';
-					print number_input('packaging_weight',
-					                   $row,null,
-					                   $disabled).'g )';
-				}
-			?></td></tr>
-
-			<? if ($row['type']!=3 || $row['type']===null) { ?>
-			<tr><th>Net.volume:</th><td><?
-				print '℮ '.number_input('net_volume',$row,null,
-				                        $disabled).'ml';
-			?></td></tr>
-
-			<tr><th>Storage:</th><td>
-				<?=number_input('store_duration_months',$row,2,$disabled)?> months
-				and
-				<?=number_input('store_duration',$row,2,$disabled)?> days,
-				at temperature
-				<?=number_input('store_temp_min',$row,3,$disabled)?>
-				-
-				<?=number_input('store_temp_max',$row,3,$disabled)?>°C,
-				in 
-				<?=dropdown('store_conditions',$row,select(
-					'id AS value,description AS text'
-					.' FROM storage_conditions'
-				),null,array('','(unknown)'))?>
-			</td></tr>
-			<? } ?>
-
-			<? if ($row['type']!=3 || $row['type']===null) { ?>
-			<tr><th>Ingredients:</th><td>
-				<?=textarea('ingredients',$row,64,5,$disabled)?>
-			</td></tr>
-			<? } else { ?>
-			<tr><th>Specifications:</th><td>
-				<?=textarea('ingredients',$row,64,5, $disabled)?>
-			</td></tr>
-			<? } ?>
-
-			<tr><th>Variation of:</th><td>
-				<?=dropdown('parent',$row,
-				            select('id AS value, name AS text FROM product'
-				                   .($row['id']?' WHERE id<>'.sql($row['id']):'')
-				                   .' ORDER BY name'),
-				            $disabled, array('','(root product)'))?>
-
-				<? if ($row['parent']) {
-					print ' <a href="'.html('product?id='.urlencode($row['parent'])).'"><img src="app/link.png" alt="go" class="icon"></a>';
-				} ?>
-			</td></tr>
-			<tr><th>Variations:</th><td><?
-				foreach (select('id,name FROM product WHERE parent='.sql($row['id'])) as $i=>$x) {
-					if ($i) print '<br />';
-					print '<a href="product?id='.html(urlencode($x['id'])).'">'
-						.html($x['name'])
-					.'</a>';
-				}
-			?>&nbsp;</td></tr>
-		</table>
-
-		<? if ($row['type']==1 || $row['type']===null) { ?>
-			<div id="<?=html($ID.'_nutrients')?>">
-			<? include 'product-nutrients.php' ?>
-			</div>
+	<? if (!$RO || $row['typical_price'] || !$row['price_no_recalc']) { ?>
+	<tr<?=$row['typical_price']?'':' class="noprint"'?>><th>Ex.price:</th><td>
+		<? if (!$RO) { ?>
+			<?=number_input('typical_price',$row,null,$RO).'€'?>
+			&nbsp;
+			<?=checkbox('price_to_parent',$row,
+				    'updates parent',$RO)?>
+			&nbsp;
+			<?=checkbox('price_no_children',$row,
+				    'does not update children',$RO)?>
+			&nbsp;
+			<?=checkbox('price_no_recalc',$row,
+				    'do not auto-update',$RO)?>
+		<? } else { ?>
+			<?=html($row['typical_price'])?>€
+			&nbsp;
+			<button id="<?=html($ID.'_calc_typicals')?>"
+				type="submit"
+				onclick="<?=html('return post_form('
+					.js($ID).','
+					.js($ID.'_calc_typicals')
+				.')')?>"
+				name="calc_typicals"
+				value="1"
+				class="refreshbutton"
+			></button>
 		<? } ?>
 	</td></tr>
-<? if (has_right('register-products')) { ?>
-	<tr><td colspan="3" class="buttons">
-		<?=ok_button('Save')?>
+	<? } ?>
+
+	<? if (!$RO || ($row['typical_units']!==null && ($row['type']!=3 || $row['typical_units']!=1))) { ?>
+	<tr><th>Units:</th><td>
+		<?=number_input('typical_units',$row,null,$RO)?>
+
+		<? if ($row['type']!=3 || $row['type']===null) { ?>
+			units, packages, rations or pairs
+		<? } else if (!$RO) { ?>
+			units, packages or pairs
+		<? } ?>
+		&nbsp;
+		<? if (!$RO && ($row['type']!=3 || $row['type']===null)) { ?>
+			<?=checkbox('units_avoid_filling',$row,
+				    'avoid filling units field',$RO)?>
+			<?=checkbox('units_near_kg',$row,
+				    'prefer round kg quantities',$RO)?>
+		<? } ?>
+	</td></tr>
+	<? } ?>
+
+	<? if (!$RO || $row['net_weight']!==null) { ?>
+	<tr><th><?
+		if ($row['type']!=3 || $row['type']===null) {
+			echo 'Net weight:';
+		} else {
+			echo 'Weight:';
+		}
+	?></th><td><?
+		if ($row['type']!=3 || $row['type']===null) {
+			echo '℮ ';
+		}
+		echo number_input('net_weight',$row,null,$RO).'g';
+		if ($row['type']!=3 || $row['type']===null) {
+
+			if (!$RO || $row['glaze_weight']!==null) {
+				echo ' + <strong>glaze</strong> ';
+				echo number_input('glaze_weight',$row,null,$RO);
+				echo 'g';
+			}
+
+			if (!$RO || $row['packaging_weight']!==null) {
+				echo ' &nbsp; ( + packaging weight';
+				echo number_input('packaging_weight',
+						  $row,null,$RO).'g )';
+			}
+		}
+	?></td></tr>
+	<? } ?>
+
+	<? if ($row['type']!=3 || $row['type']===null) { ?>
+
+	<? if (!$RO || $row['net_volume']!==null) { ?>
+	<tr><th>Net.volume:</th><td><?
+		print '℮ '.number_input('net_volume',$row,null,$RO).'ml';
+	?></td></tr>
+	<? } ?>
+
+	<? if (!$RO || $row['store_duration_months'] || $row['store_duration'] || $row['store_temp_min'] || $row['store_temp_max'] || $row['store_conditions']) { ?>
+	<tr><th>Storage:</th><td>
+		<? if (!$RO || $row['store_duration_months'] || $row['store_duration']) { ?>
+			up to
+
+			<? if (!$RO || $row['store_duration_months']) { ?>
+			<?=number_input('store_duration_months',$row,2,$RO)?> months
+			<? } ?>
+
+			<? if (!$RO || $row['store_duration']) { ?>
+			<? if (!$RO || $row['store_duration_months']) { ?>
+				and
+			<? } ?>
+			<?=number_input('store_duration',$row,2,$RO)?> days
+			<? } ?>
+		<? } ?>
+
+		<? if (!$RO || $row['store_temp_min'] || $row['store_temp_max']) { ?>
+
+		&nbsp;
+		temperature
+
+		<? if (!$RO || $row['store_temp_min']) { ?>
+		min
+		<?=number_input('store_temp_min',$row,3,$RO)?>
+		<? } ?>
+
+		<? if (!$RO || $row['store_temp_max']) { ?>
+		max
+		<?=number_input('store_temp_max',$row,3,$RO)?>°C,
+		<? } ?>
+
+		<? } ?>
+
+		<? if (!$RO || $row['store_conditions']) { ?>
+		&nbsp;
+		in 
+		<?=dropdown('store_conditions',$row,select(
+			'id AS value,description AS text'
+			.' FROM storage_conditions'
+		),$RO,array('','(unknown)'))?>
+		<? } ?>
+	</td></tr>
+	<? } ?>
+	<? } ?>
+
+	<? if (!$RO || $row['ingredients']!==null || $row['type']==1) { ?>
+	<tr><th>Description:</th><td>
+		<?= $RO
+			? '<div style="width: 48em; font-family: monospace">'.html($row['ingredients']).'</div>'
+			: textarea('ingredients',$row,64,5,$RO)
+		?>
+
+		<? if ($RO && $row['type']==1) {
+			echo '<div class="noprint">';
+			echo '<a href="'.html('product-nutrients?id='.urlencode($row['id'])).'">Nutritional information</a>';
+			echo '</div>';
+		} ?>
+	</td></tr>
+	<? } ?>
+
+<? if (has_right('register-products') && $own_record) { ?>
+	<tr><td colspan="2" class="buttons">
+		<? if ($MODE<0) { ?>
+			<?=submit_button('Delete')?>
+			<?=link_button('Keep',array('id'=>$row['id']),'cancel')?>
+		<? } else if ($RO) { ?>
+			<?=link_button('Edit',array('id'=>'+'.$row['id']),'edit')?>
+			<?=link_button('Delete',array('id'=>-$row['id']),'delete')?>
+		<? } else if ($MODE>0) { ?>
+			<?=submit_button('Save')?>
+			<?=link_button('Cancel',array('id'=>(int)$row['id']),'cancel')?>
+		<? } else { ?>
+			<?=submit_button('Save')?>
+		<? } ?>
 	</td></tr>
 <? } ?>
 </td></tr></table>

@@ -276,8 +276,8 @@ def print_drops(tablename,prevtables,tables,dropped):
 			if f2[4] and f2[4][0]==tablename:
 				print_drops(tablename2,prevtables,tables,dropped)
 
-	if (prevtables.get(tablename)==None and tables.get(tablename)<>None) or \
-	   (prevtables.get(tablename)<>None and tables.get(tablename)==None):
+	#if (prevtables.get(tablename)==None and tables.get(tablename)<>None) or \
+	if (prevtables.get(tablename)<>None and tables.get(tablename)==None):
 		sys.stdout.write('DROP TABLE IF EXISTS %s;\n'%sqlfield(tableprefix+tablename))
 		sys.stdout.write('\n')
 

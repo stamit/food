@@ -29,7 +29,6 @@ if ( $DEPTH <= 0 && !$INLINE_REQUEST ) {
 	);
 
 	$DEFAULT_CSS = array(
-		'/lib/maketable/maketable.css',
 		'/lib/cal/calendar-system.css',
 	);
 

@@ -173,7 +173,7 @@ function maketable_spec(&$MAKETABLE) {
 	foreach ($oldjoin as $a=>$b)
 		maketable_add_table($MAKETABLE, $a, $b);
 	if ( !count($MAKETABLE['join']) )
-		throw new LoggedException('there are no source tables ("join"=>...)');
+		throw new Exception('there are no source tables ("join"=>...)');
 
 	$oldkey = $MAKETABLE['key'];
 	$MAKETABLE['key'] = array();
@@ -192,17 +192,17 @@ function maketable_spec(&$MAKETABLE) {
 					$t = $broken[0];
 					$k = $broken[1];
 				} else {
-					throw new LoggedException('please specify one key per table like this: "key"=>array("tablename"=>"keyfield", ...)');
+					throw new Exception('please specify one key per table like this: "key"=>array("tablename"=>"keyfield", ...)');
 				}
 			} else {
 				$t = $x;
 				$k = $y;
 			}
 
-			if (!strlen($k)) throw new LoggedException('missing key for table '.repr($x));
+			if (!strlen($k)) throw new Exception('missing key for table '.repr($x));
 
 			if ($MAKETABLE['key'][$t] != null)
-				throw new LoggedException('duplicate key given for table '.repr($x));
+				throw new Exception('duplicate key given for table '.repr($x));
 
 			$MAKETABLE['key'][$t] = $k;
 		}
@@ -215,13 +215,13 @@ function maketable_spec(&$MAKETABLE) {
 			$MAKETABLE['where'] = null;
 		}
 	} else if ($MAKETABLE['where']!==null && !is_array($MAKETABLE['where'])) {
-		throw new LoggedException('"where" is empty or not a string/array');
+		throw new Exception('"where" is empty or not a string/array');
 	}
 
 	if (is_string($MAKETABLE['having']))
 		$MAKETABLE['having'] = array($MAKETABLE['having']);
 	else if ($MAKETABLE['having']!==null && !is_array($MAKETABLE['having']))
-		throw new LoggedException('"having" is not string or array');
+		throw new Exception('"having" is not string or array');
 
 	foreach ($oldcolumns as $a => $b) if ($b!==null) {
 		maketable_add_column($MAKETABLE, $a,$b);
@@ -230,7 +230,7 @@ function maketable_spec(&$MAKETABLE) {
 		maketable_add_column($MAKETABLE, $a,$b, 'hidden');
 	}
 	if ( !count($MAKETABLE['columns']))
-		throw new LoggedException('no output columns specified ("columns"=>...)');
+		throw new Exception('no output columns specified ("columns"=>...)');
 
 	if (!is_string($MAKETABLE['sayrecord']))
 		$MAKETABLE['sayrecord'] = maketable_text('record');
@@ -251,35 +251,35 @@ function maketable_spec(&$MAKETABLE) {
 		if (strtoupper($MAKETABLE['orderad'])=='DESC')
 			$MAKETABLE['orderad'] = 2;
 		if ($MAKETABLE['orderad']!=1 && $MAKETABLE['orderad']!=2)
-			throw new LoggedException('"orderad" must be 1 (asc) or 2 (desc), not '
+			throw new Exception('"orderad" must be 1 (asc) or 2 (desc), not '
 			                          .repr($MAKETABLE['orderad']));
 	}
 
 	maketable_tablesubset($MAKETABLE, 'insert');
 	maketable_tablesubset($MAKETABLE, 'userinsert', 'insert');
 	if ($MAKETABLE['insertinc']!==null && !is_string($MAKETABLE['insertinc']) )
-		throw new LoggedException('"insertinc" is not a string');
+		throw new Exception('"insertinc" is not a string');
 
 	if ($MAKETABLE['deleteurl']!==null) {
 		if (!is_string($MAKETABLE['deleteurl']) )
-			throw new LoggedException('"deleteurl" is not a string');
+			throw new Exception('"deleteurl" is not a string');
 
 		$MAKETABLE['delete'] = true;
 	}
 	maketable_tablesubset($MAKETABLE, 'delete');
 	maketable_tablesubset($MAKETABLE, 'userdelete', 'delete');
 	if ($MAKETABLE['deleteinc']!==null && !is_string($MAKETABLE['deleteinc']) )
-		throw new LoggedException('"deleteinc" is not a string');
+		throw new Exception('"deleteinc" is not a string');
 
 	if ($MAKETABLE['updateinc']!==null) {
 		if (!is_string($MAKETABLE['updateinc']) )
-			throw new LoggedException('"updateinc" is not a string');
+			throw new Exception('"updateinc" is not a string');
 
 		$MAKETABLE['update'] = true;
 	}
 	if ($MAKETABLE['updateurl']!==null) {
 		if (!is_string($MAKETABLE['updateurl']) )
-			throw new LoggedException('"updateurl" is not a string');
+			throw new Exception('"updateurl" is not a string');
 
 		$MAKETABLE['update'] = true;
 	}
@@ -295,7 +295,7 @@ function maketable_spec(&$MAKETABLE) {
 		if (is_array($MAKETABLE['key'])) {
 			foreach ($MAKETABLE['join'] as $join) {
 				if ($MAKETABLE['key'][$join['table']] === null) {
-					throw new LoggedException('unknown key for table '.repr($instance));
+					throw new Exception('unknown key for table '.repr($instance));
 				}
 			}
 		}
@@ -308,18 +308,18 @@ function maketable_spec(&$MAKETABLE) {
 		if (count($MAKETABLE['userdelete'])>0)
 			$MAKETABLE['buttons'][] = 'delete';
 	} else if (!is_array($MAKETABLE['buttons'])) {
-		throw new LoggedException('expected array in "buttons"');
+		throw new Exception('expected array in "buttons"');
 	}
 
 	$newbuttons = array();
 	foreach ($MAKETABLE['buttons'] as $name=>$button) {
 		$newname = is_int($name)?$button:$name;
 		if (!is_string($newname)) {
-			throw new LoggedException('expected string for'
+			throw new Exception('expected string for'
 			                          .' button name; not '
 			                          .repr($button));
 		} else if (!preg_match('/^[a-zA-Z]+$/',$newname)) {
-			throw new LoggedException('button names must consist'
+			throw new Exception('button names must consist'
 			                          .' of letters only; not like '
 			                          .repr($newname));
 		}
@@ -348,8 +348,7 @@ function maketable_spec(&$MAKETABLE) {
 			break;
 		default:
 			if (is_int($name)) {
-			  throw new LoggedException('not a predefined button: '
-			                            .repr($newname));
+			  throw new Exception('not a predefined button: '.repr($newname));
 			}
 			$newbutton = array();
 		}
@@ -374,21 +373,21 @@ function maketable_spec(&$MAKETABLE) {
 			);
 			foreach ($newbutton['vars'] as $n=>$var) {
 				if (!is_int($n)) {
-					throw new LoggedException(
+					throw new Exception(
 						'"vars" for button '
 						.repr($newname)
 						.' contains key: '
 						.repr($n)
 					);
 				} else if (!is_string($var)) {
-					throw new LoggedException(
+					throw new Exception(
 						'"vars" for button '
 						.repr($newname)
 						.' contains non-string: '
 						.repr($var)
 					);
 				} else if (!$valid_jsvars[$var]) {
-					throw new LoggedException(
+					throw new Exception(
 						'"vars" for button '
 						.repr($newname)
 						.' contain unrecognized'
@@ -397,7 +396,7 @@ function maketable_spec(&$MAKETABLE) {
 				}
 			}
 		} else {
-			throw new LoggedException(
+			throw new Exception(
 				'"vars" for button '.repr($newname)
 				.' is not an array or boolean'
 			);
@@ -406,7 +405,7 @@ function maketable_spec(&$MAKETABLE) {
 		if ($newbutton['class']===null) {
 			$newbutton['class'] = $newname.'button';
 		} else if (!is_string($newbutton['class'])) {
-			throw new LoggedException(
+			throw new Exception(
 				'"class" for button '.repr($newname)
 				.' must be string, not '
 				.repr($newbutton['class'])
@@ -416,7 +415,7 @@ function maketable_spec(&$MAKETABLE) {
 		if ($newbutton['type']===null) {
 			$newbutton['type'] = 'submit';
 		} else if (!is_string($newbutton['type'])) {
-			throw new LoggedException(
+			throw new Exception(
 				'"type" for button '.repr($newname)
 				.' must be string, not '
 				.repr($newbutton['type'])
@@ -427,7 +426,7 @@ function maketable_spec(&$MAKETABLE) {
 			$newbutton['onclick'] =
 				'maketable_button(id,'.js($newname).',rowid)';
 		} else if (!is_string($newbutton['type'])) {
-			throw new LoggedException(
+			throw new Exception(
 				'"type" for button '.repr($newname)
 				.' must be string, not '
 				.repr($newbutton['type'])
@@ -448,7 +447,7 @@ function maketable_spec(&$MAKETABLE) {
 		$MAKETABLE['navigation'] = intval($MAKETABLE['navigation']);
 		break;
 	default:
-		throw new LoggedException('"navigation" should be -1, 0, 1, 2 or 3; not '.repr($MAKETABLE['navigation']));
+		throw new Exception('"navigation" should be -1, 0, 1, 2 or 3; not '.repr($MAKETABLE['navigation']));
 	}
 
 	if ($MAKETABLE['offset']===null || intval($MAKETABLE['offset'])<0)
@@ -480,11 +479,11 @@ function maketable_tablesubset(&$MAKETABLE, $which, $dfl=null) {
 		if ($MAKETABLE['aliases'][$old] !== null) {
 			$MAKETABLE[$which] = array($old);
 		} else {
-			throw new LoggedException('the '.repr($old).' in parameter '.repr($which).' is not the name or alias of a table');
+			throw new Exception('the '.repr($old).' in parameter '.repr($which).' is not the name or alias of a table');
 		}
 	} else if (is_integer($old)) {
 		if ($old > count($MAKETABLE['join']))
-			throw new LoggedException('the '.repr($old).' in parameter '.repr($which).' is greater than the number of tables');
+			throw new Exception('the '.repr($old).' in parameter '.repr($which).' is greater than the number of tables');
 
 		$MAKETABLE[$which] = array();
 		for ($i = 0 ; $i < abs($old) ; ++$i)
@@ -496,18 +495,18 @@ function maketable_tablesubset(&$MAKETABLE, $which, $dfl=null) {
 				if ($x>=0 && $x<count($MAKETABLE['join'])) {
 					$MAKETABLE[$which][] = $x;
 				} else {
-					throw new LoggedException('the '.repr($x).' in parameter '.repr($which).' does not index a joined table [0,'.count($MAKETABLE['join']).')');
+					throw new Exception('the '.repr($x).' in parameter '.repr($which).' does not index a joined table [0,'.count($MAKETABLE['join']).')');
 				}
 			} else if (is_string($x)) {
 				if ($MAKETABLE['aliases'][$x] !== null) {
 					$MAKETABLE[$which][] = $MAKETABLE['aliases'][$x];
 				} else {
-					throw new LoggedException('the '.repr($x).' in parameter '.repr($which).' is not the name or alias of a table');
+					throw new Exception('the '.repr($x).' in parameter '.repr($which).' is not the name or alias of a table');
 				}
 			}
 		}
 	} else {
-		throw new LoggedException('"delete" must be boolean, integer or array of integers');
+		throw new Exception('"delete" must be boolean, integer or array of integers');
 	}
 }
 
@@ -521,9 +520,9 @@ function maketable_add_table(&$MAKETABLE, $a, $b) {
 		$newcond = array();
 		foreach ($join['on'] as $field=>$expr) {
 			if (!strlen($field))
-				throw new LoggedException('empty or missing field name in join condition: '.repr($field).' => '.repr($expr));
+				throw new Exception('empty or missing field name in join condition: '.repr($field).' => '.repr($expr));
 			if ($expr==='')
-				throw new LoggedException('empty field value in join condition: '.repr($field).' => '.repr($expr));
+				throw new Exception('empty field value in join condition: '.repr($field).' => '.repr($expr));
 
 			if ($expr === null) {  # "a JOIN b ON x IS NULL"
 				$newcond[$field] = $expr;
@@ -534,27 +533,27 @@ function maketable_add_table(&$MAKETABLE, $a, $b) {
 				maketable_add_field($MAKETABLE, $newcond[$field]);
 			} else if (count($broken)>=1) {  # "a JOIN b ON x=y"
 				# FIXME this won't be returned with instancename even if unambiguous
-				throw new LoggedException('please use full `instance`.`field` syntax for field backreference instead of '.repr($expr));
+				throw new Exception('please use full `instance`.`field` syntax for field backreference instead of '.repr($expr));
 			} else {
 				# MAYBE TODO do extract field references from expression
 				# MAYBE TODO support string constants
-				throw new LoggedException('cannot handle string constants/complex expressions in joins (use "where"): '.repr($field).' => '.repr($expr));
+				throw new Exception('cannot handle string constants/complex expressions in joins (use "where"): '.repr($field).' => '.repr($expr));
 			}
 		}
 		$join['on'] = $newcond;
 
 	} else {
-		throw new LoggedException('invalid join condition (expected array of "field"=>"sql"): '.repr($join['on']));
+		throw new Exception('invalid join condition (expected array of "field"=>"sql"): '.repr($join['on']));
 	}
 
 	if ($join['as'] === null) {
 		if ($MAKETABLE['aliases'][$join['table']] !== null)
-			throw new LoggedException('you need to give an alias name ("as"=>"...") for second use of table '.repr($join['table']));
+			throw new Exception('you need to give an alias name ("as"=>"...") for second use of table '.repr($join['table']));
 
 		$join['as'] = $join['table'];
 	} else {
 		if ($MAKETABLE['aliases'][$join['as']] !== null)
-			throw new LoggedException('alias '.repr($join['as']).' given to two or more instances');
+			throw new Exception('alias '.repr($join['as']).' given to two or more instances');
 	}
 
 	$MAKETABLE['aliases'][$join['as']] = count($MAKETABLE['join']);
@@ -574,12 +573,12 @@ function maketable_add_column(&$MAKETABLE, $a, $b=null, $cols='columns') {
 	$out = maketable_positional_params(is_string($a)?$a:array(),array('expr','title','fun','search','search_in','edit','width','size','maxlength','opts','opts_sql','f','tip','nowrap','class','prefix','postfix'),$b);
 
 	if ($out['expr']===null && $out['fun']===null && $out['f']===null)
-		throw new LoggedException('column with no expression and no function: '.repr($out));
+		throw new Exception('column with no expression and no function: '.repr($out));
 
 	if ($out['fun']!==null && !function_exists($out['fun']))
-		throw new LoggedException('function '.repr($out['fun']).' does not exist');
+		throw new Exception('function '.repr($out['fun']).' does not exist');
 	if ($out['f']!==null && !function_exists($out['f']))
-		throw new LoggedException('function '.repr($out['f']).' does not exist');
+		throw new Exception('function '.repr($out['f']).' does not exist');
 
 	# is 'expr' a simple field reference? then we quote it! (now it's even
 	# safe to put SQL keywords in 'expr'!)
@@ -589,7 +588,7 @@ function maketable_add_column(&$MAKETABLE, $a, $b=null, $cols='columns') {
 	} else {
 		$out['field'] = null;
 		if ($out['edit']!==null)
-			throw new LoggedException('can only edit columns with simple field references: '.repr($out));
+			throw new Exception('can only edit columns with simple field references: '.repr($out));
 		$out['edit'] = 'none';
 	}
 
@@ -602,13 +601,13 @@ function maketable_add_column(&$MAKETABLE, $a, $b=null, $cols='columns') {
 		}
 	} else {
 		if (!is_string($out['as']))
-			throw new LoggedException('field alias not a string: '.repr($out['as']));
+			throw new Exception('field alias not a string: '.repr($out['as']));
 		if ($MAKETABLE['namestaken'][$out['as']])
-			throw new LoggedException('this name is already taken: '.repr($out['as']));
+			throw new Exception('this name is already taken: '.repr($out['as']));
 		$MAKETABLE['namestaken'][$out['as']] = true;
 	}
 	if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_:.-]*$/',$out['as']))
-		throw new LoggedException('please use field aliases which can be used as HTML element identifiers (id="..."); not '.repr($out['as']));
+		throw new Exception('please use field aliases which can be used as HTML element identifiers (id="..."); not '.repr($out['as']));
 
 	if (!is_string($out['head'])) {
 		if (is_string($out['title'])) 
@@ -632,7 +631,7 @@ function maketable_add_column(&$MAKETABLE, $a, $b=null, $cols='columns') {
 		$out['size'] = null;
 	#} else {
 	#	if (!is_int($out['size'])) {
-	#		throw new LoggedException('size of input box not an integer: '.repr($out['size']));
+	#		throw new Exception('size of input box not an integer: '.repr($out['size']));
 	#	}
 	}
 
@@ -935,14 +934,14 @@ function maketable_sql_condition($cond, $deftable=null) {
 				} else if (count($broken) >= 1) {
 					$where[] = sqlid($broken[0]).$post;
 				} else {
-					throw new LoggedException('invalid SQL identifier: '.repr($name));
+					throw new Exception('invalid SQL identifier: '.repr($name));
 				}
 			}
 		}
 		return implode(' AND ',$where);
 
 	} else {
-		throw new LoggedException('invalid condition: '.repr($cond));
+		throw new Exception('invalid condition: '.repr($cond));
 	}
 }
 
@@ -1842,7 +1841,7 @@ function maketable_posted(&$MAKETABLE,&$PARAMS) {
 	case 'reorder':
 		if ( !count($MAKETABLE['dragdrop']) ||
 		     !strlen($MAKETABLE['orderfield']) )
-			throw new LoggedException('Not an ordered table.');
+			throw new Exception('Not an ordered table.');
 
 		$of = $MAKETABLE['orderfield'];
 		$updjoin = maketable_sql_join($MAKETABLE);
@@ -1865,7 +1864,7 @@ function maketable_posted(&$MAKETABLE,&$PARAMS) {
 
 	case 'insert':
 		if ( ! $MAKETABLE['insert'] )
-			throw new LoggedException('No insertions permitted.');
+			throw new Exception('No insertions permitted.');
 
 		$row = jsdecode($PARAMS['row']);
 		unset($PARAMS['row']);
@@ -1880,7 +1879,7 @@ function maketable_posted(&$MAKETABLE,&$PARAMS) {
 
 	case 'delete':
 		if ( count($MAKETABLE['delete'])<=0 )
-			throw new LoggedException('No deletions permitted.');
+			throw new Exception('No deletions permitted.');
 
 		$keys = jsdecode($PARAMS['key']);
 		unset($PARAMS['key']);
@@ -2215,14 +2214,14 @@ function maketable_first_key(&$array) {
 	foreach ($array as $x => $y)
 		return $x;
 	
-	throw new LoggedException('array is empty and therefore has no first key');
+	throw new Exception('array is empty and therefore has no first key');
 }
 
 function maketable_first_value(&$array) {
 	foreach ($array as $x => $y)
 		return $y;
 	
-	throw new LoggedException('array is empty and therefore has no first value');
+	throw new Exception('array is empty and therefore has no first value');
 }
 
 function maketable_array_map(&$array,&$mapping) {

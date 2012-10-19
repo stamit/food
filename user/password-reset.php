@@ -39,7 +39,7 @@
 	</tr>
 	<tr>
 		<td colspan="2" class="buttons">
-			<?=ok_button('Send instructions')?>
+			<?=submit_button('Send instructions')?>
 		</td>
 	</tr>
 </table>

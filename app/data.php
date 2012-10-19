@@ -1,5 +1,9 @@
 <?
 
+function website_html($row) {
+	return $row['person.website']!=null ? '<a href="'.html('http://'.$row['person.website']).'">'.html($row['person.website']).'</a>' : '';
+}
+
 function person_or_store_name_html($row) {
 	if ($row['person.id']!==null) {
 		return '<a href="person?id='.html($row['person.id']).'">'
@@ -17,6 +21,19 @@ function person_name_html($row) {
 	return $row['person.id']===null?'':'<a href="person?id='.html($row['person.id']).'">'
 		.html($row['person.name'])
 	.'</a>';
+}
+function person_select_html($field,$row,$RO,$nulltext) {
+	return $RO
+		? ( $row[$field]
+			? '<a href="'.html('person?id='.urlencode($row[$field])).'">'
+				.html(value0('name FROM person WHERE id='.sql($row[$field])))
+			  .'</a>'
+			: ''
+		)
+		: dropdown($field,$row,
+			   select('id AS value, name AS text'
+				  .' FROM person ORDER BY name'),
+			   $RO, array('',ifnull($nulltext,'(unknown)')));
 }
 
 function store_name_html($row) {
@@ -150,19 +167,6 @@ function product_nutrient_on_change($prodid,$nutid,$value,$nutname=null) {
 	}
 }
 
-function product_children_link($prodid) {
-	foreach (select('* FROM nutrient') as $nut) {
-		$pn = row0('* FROM product_nutrient'
-		           .' WHERE product='.sql($prodid)
-		           .' AND nutrient='.sql($nut['id']));
-		if ( $pn===null || ($pn['value']===null && !$pn['source']) ) {
-			product_nutrient_link_to_children(
-				$prodid, $nut['id'], $nut['name']
-			);
-		}
-	}
-}
-
 function product_nutrient_link_to_children($prodid,$nutid,$nutname=null) {
 	if ($nutname===null) {
 		$nutname = value('name FROM nutrient'
@@ -172,9 +176,7 @@ function product_nutrient_link_to_children($prodid,$nutid,$nutname=null) {
 	foreach (col('id FROM product'
 	             .' WHERE parent='.sql($prodid)) as $cid) {
 		if (product_nutrient_check_for_loops($cid,$nutid,$prodid)) {
-			throw new LoggedException(
-				'Nutrient '.$nutid.' links form a loop.'
-			);
+			throw new Exception('Nutrient '.$nutid.' links form a loop.');
 		}
 	}
 
@@ -266,77 +268,6 @@ $fooddb_multipliers = array(
 	'folate'=>0.001,
 );
 
-function product_fooddb_import($prodid,$fdbid) {
-	global $fooddb_mapping;
-	global $fooddb_multipliers;
-
-	$pro = row('* FROM product WHERE id='.sql($prodid));
-
-	$fdb = row0('* FROM fd_nutrients WHERE NDB_No='.sql($fdbid));
-	if ($fdb===null) throw new LoggedException('FOODDB ID does not exist: '.intval($fdbid));
-
-	$product = array(
-		'id'=>$prodid,
-	);
-
-	if ($pro['sample_weight']===null)
-		$product['sample_weight'] = 100.0;
-	else
-		$product['sample_weight'] = $pro['sample_weight'];
-
-	$multiplier = $product['sample_weight']/100.0;
-
-	$product['refuse_weight'] = $fdb['Refuse_Pct']*$multiplier;
-
-	foreach (select('* FROM nutrient') as $nut) {
-		$mapping = $fooddb_mapping[$nut['name']];
-		$pn = row0('* FROM product_nutrient'
-		           .' WHERE product='.sql($prodid)
-		           .' AND nutrient='.sql($nut['id']));
-		if ($mapping!==null && $fdb[$mapping]!==null && $pn===null) {
-			$value = $fdb[$mapping]*$multiplier;
-			if ($fooddb_multipliers[$nut['name']]!==null) {
-				$value *= $fooddb_multipliers[$nut['name']];
-			}
-			store('product_nutrient.id',array(
-				'product'=>$prodid,
-				'nutrient'=>$nut['id'],
-				'value'=>$value,
-				'source'=>3,
-				'id2'=>$fdbid,
-			));
-			if ($nut['basetable']) {
-				$product[$nut['name']] = $value;
-			}
-			product_nutrient_on_change($prodid,$nut['id'],
-			                               $value);
-		}
-	}
-
-	update('product.id',$product);
-}
-
-function product_clearlink($prodid,$source) {
-	foreach (select('* FROM product_nutrient'
-	                .' WHERE product='.sql($prodid)
-	                .' AND source='.sql($source)) as $pn) {
-		$nut = fetch('nutrient.id',$pn['nutrient']);
-		if ($nut['basetable']) {
-			store('product.id',array(
-				'id'=>$prodid,
-				$nut['name']=>null,
-			));
-		}
-		store('product_nutrient.id',array('id'=> - $pn['id']));
-
-		product_nutrient_on_change(
-			$prodid,
-			$nut['id'],
-			null
-		);
-	}
-}
-
 function product_nutrient_link_multiplier($prodid,$parentid) {
 	$par = row('sample_weight,sample_volume,refuse_weight,refuse_volume'
 	           .' FROM product WHERE id='.sql($parentid));
@@ -354,32 +285,6 @@ function product_nutrient_link_multiplier($prodid,$parentid) {
 	return $multiplier;
 }
 
-function product_parent_link($prodid,$parentid) {
-	$multiplier = product_nutrient_link_multiplier($prodid,$parentid);
-
-	if ($multiplier===null) {
-		$par = row('* FROM product WHERE id='.sql($parentid));
-		put('product.id',array(
-			'id'=>$prodid,
-			'sample_weight'=>$par['sample_weight'],
-			'sample_volume'=>$par['sample_volume'],
-		        'refuse_weight'=>$par['refuse_weight'],
-		        'refuse_volume'=>$par['refuse_volume'],
-		));
-		$multiplier = 1.0;
-	}
-
-	foreach (select('* FROM nutrient') as $nut) {
-		$pn = row0('* FROM product_nutrient'
-		           .' WHERE product='.sql($prodid)
-		           .' AND nutrient='.sql($nut['id']));
-		if ( $pn===null || ($pn['value']===null && !$pn['source']) ) {
-			product_nutrient_link($prodid,$nut,$parentid,
-			                      $multiplier);
-		}
-	}
-}
-
 function product_nutrient_link($prodid,$nut,$linkid,$multiplier=null) {
 	if (!is_array($nut)) $nut = fetch('nutrient.id',$nut);
 	if ($multiplier===null)
@@ -390,9 +295,7 @@ function product_nutrient_link($prodid,$nut,$linkid,$multiplier=null) {
 	           .' AND nutrient='.sql($nut['id']));
 
 	if (product_nutrient_check_for_loops($linkid,$nut['id'],$prodid)) {
-		throw new LoggedException(
-			'Nutrient '.$nut['tag'].' links form a loop.'
-		);
+		throw new Exception('Nutrient '.$nut['tag'].' links form a loop.');
 	}
 
 	$value = value0('value FROM product_nutrient'

@@ -86,7 +86,7 @@
 	</tr>
 	<tr>
 		<td colspan="2" class="buttons">
-			<?=ok_button('Register')?>
+			<?=submit_button('Sign up')?>
 		</td>
 	</tr>
 </table>

@@ -8,7 +8,7 @@ function break_email_address($c) {
 	} else if (preg_match('/^[^@]+@[^@]+$/', $c, $matches)) {
 		return array($c,null);
 	} else {
-		throw new LoggedException('address not in "email" or "name <email>" format: '.repr($c));
+		throw new Exception('address not in "email" or "name <email>" format: '.repr($c));
 	}
 }
 
@@ -40,7 +40,7 @@ function send_email($headers, $text, $html=null) {
 			} else if (is_array($value)) {
 				$x = value;
 			} else if (value!==null) {
-				throw new LoggedException('"From" is neither string nor array: '.repr($headers['To']));
+				throw new Exception('"From" is neither string nor array: '.repr($headers['To']));
 			}
 			$mail->From = $x[0];
 			$mail->FromName = $x[1];
@@ -52,7 +52,7 @@ function send_email($headers, $text, $html=null) {
 			} else if (is_array($value)) {
 				$to = $value;
 			} else {
-				throw new LoggedException('"To" is neither string nor array: '.repr($value));
+				throw new Exception('"To" is neither string nor array: '.repr($value));
 			}
 			foreach ($to as $b=>$c) {
 				if (is_integer($b)) {
@@ -90,7 +90,7 @@ function send_email($headers, $text, $html=null) {
 	}
 
 	if (!$mail->send()) {
-		throw new LoggedException('Could not send mail: '.$mail->ErrorInfo);
+		throw new Exception('Could not send mail: '.$mail->ErrorInfo);
 	}
 }
 
