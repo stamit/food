@@ -89,7 +89,6 @@ typemap = {
 def readschema(f,fn):
 	lineno = 0
 	tables = {}
-	curtable = None
 
 	try:
 		while True:
@@ -113,92 +112,112 @@ def readschema(f,fn):
 
 			if len(words)==1:
 				tablename = words[0]
+				if tablename[-1]==':':
+					tablename = tablename[:-1]
 				if not re.match('[A-Za-z_][A-Za-z0-9_]*$', tablename):
 					raise Exception('can only handle alphanumeric characters and underscores in table names: %s'%line)
 
-				curtable = tables[tablename] = []
+				tables[tablename] = []
 			else:
 				if len(words)<2 or len(words)>5:
 					raise Exception('expected: sqlfield {N|A|TYPE} [{len|digits.digits} [{Y|N} [reftable.refkey]]]')
 
-				if len(words[1])==2 and words[1][-1:]=='*':
-					keyfield = True
+				#
+				# key information
+				#
+				if words[0][-1:]=='*':
+					pkeyfield = True
+					words[0] = words[0][:-1]
+				elif words[1][-1:]=='*':
+					pkeyfield = True
 					words[1] = words[1][:-1]
-				elif len(words)>=3 and len(words[2])>=2 and words[2][-1:]=='*':
-					keyfield = True
+				elif len(words)>=3 and words[2][-1:]=='*':
+					pkeyfield = True
 					words[2] = words[2][:-1]
 				else:
-					keyfield = False
+					pkeyfield = False
+
+				if words[0][-1:]=='!':
+					skeyfield = True
+					words[0] = words[0][:-1]
+				else:
+					skeyfield = False
 
 				#
-				# [0] field name
+				# field name
 				#
 				fname = words[0].split('.')
 				if len(fname)>2 or not fname[0] or not fname[-1]:
 					raise Exception('expected [TABLE.]FIELD as first word')
-
-				field = [fname[-1]]
+				if len(fname)==2:
+					tablename = fname[0]
+				fname = fname[-1]
 
 				#
-				# [1] type
+				# type
 				#
-				if typemap.get(words[1])==None:
+				size = None
+				if len(words[1]) and words[1][-1]=='?':
+					nullable = True
+					ftype = words[1][:-1].upper()
+				else:
+					nullable = None
+					ftype = words[1].upper()
+
+				m = re.match('^([AN])([0-9]+(\.[0-9]+)?)',ftype)
+				if m:
+					ftype = m.group(1)
+					size = m.group(2)
+
+				if typemap.get(ftype)==None:
 					raise Exception("unrecognized type (second word): %s"%line)
 
-				field.append(typemap[words[1]])
+				ftype = typemap[ftype]
 
-				#
-				# [2] length or digits.decimals
-				#
-				if len(words)>=3:
-					if words[2] == '-':
-						field.append(None)
+				fkey = None
+
+				for w in words[2:]:
+					if w[0] in '-0123456789' and size==None:
+						if w[0]!='-':
+							size = w
+						else:
+							size = ''
+					elif w=='Y' and nullable==None:
+						nullable = True
+					elif w=='N' and nullable==None:
+						nullable = False
+					elif (w[0]=='@' or w.count('.')==1) and fkey==None:
+						if w[0]=='@': w = w[1:]
+						fkey = w.split('.')
 					else:
-						field.append(tuple(map(int,words[2].split('.'))))
-						while len(field[2]) and field[2][-1]==0:
-							field[2] = field[2][:-1]
-						if len(field[2])==1:
-							field[2] = field[2][0]
-				elif field[1]=='DECIMAL' or field[1]=='VARCHAR':
-					raise Exception('need field length for DECIMAL and VARCHAR fields as third word')
+						raise Exception("unrecognized word: %s"%repr(w))
 
-				#
-				# [3] nullable
-				#
-				if len(words)>=4:
-					if words[3]=='Y':
-						field.append(True)
-					elif words[3]=='N':
-						field.append(False)
-					else:
-						raise Exception("expected nullable flag ('Y' or 'N') as fourth word (defaults to 'N' if missing)")
+				if size:
+					if ftype<>'DECIMAL' and ftype<>'VARCHAR':
+						raise Exception('only DECIMAL and VARCHAR fields can have sizes')
+
+					size = size.split('.')
+
+					if len(size)>2:
+						raise Exception('invalid field size: %s'%size)
+
+					if len(size)==2 and ftype<>'DECIMAL':
+						raise Exception('only DECIMAL fields can have 123.123 sizes')
+
+					size = tuple(map(int,size))
+					if len(size)==1:
+						size = size[0]
 				else:
-					field.append(False)
+					size = None
 
-				#
-				# [4] reftable.refkey
-				#
-				if len(words)>=5:
-					field.append(words[4].split('.'))
-					if len(field[4])<>2:
-						raise Exception("expected REFTABLE.REFKEY as fifth word")
-				else:
-					field.append(None)
+				field = [fname,ftype,size,nullable,fkey,pkeyfield,comment]
 
-				#
-				# [5] keyfield?
-				#
-				field.append(keyfield)
+				if (ftype=='DECIMAL' or ftype=='VARCHAR') and size==None:
+					raise Exception('need field length for DECIMAL and VARCHAR fields')
 
-				#
-				# [6] comment
-				#
-				field.append(comment)
-
-				if len(fname)==2:
-					tables[fname[0]].append(field)
-				else:
-					curtable.append(field)
+				if tables.get(tablename)==None:
+					tables[tablename] = []
+				tables[tablename].append(field)
 	except Exception, x:
 		sys.stderr.write('%s:%d: %s\n\n'%(fn,lineno,'; '.join(map(str,x.args))))
 		raise
@@ -352,6 +371,10 @@ def print_schema(tablename,prevtables,tables,written):
 		if f[4]:
 			print_schema(f[4][0],prevtables,tables,written)
 
+	if len(written)==1 and mysql:
+		sys.stdout.write('SET NAMES utf8;\n\n');
+
+
 	#
 	# dump table
 	#
@@ -376,7 +399,7 @@ def print_schema(tablename,prevtables,tables,written):
 			sys.stdout.write('CREATE TABLE %s (\n\t%s\n)%s;\n'%(sqlfield(tableprefix+tablename),',\n\t'.join(commalist),extra))
 			if commentsyntax==1:
 				for field in fields:
-					if field[5]<>None:
+					if field[6]<>None:
 						sys.stdout.write('COMMENT ON %s.%s IS %s;\n'%(sqlfield(tablename),sqlfield(field[1]),sqlstring(field[5])));
 			sys.stdout.write('\n');
 	else:
@@ -479,9 +502,6 @@ if __name__ == '__main__':
 	else:
 		sys.stderr.write('syntax: %s [[[PREFIX] {PREVSCHEMA|-}] SCHEMA]\n'%sys.argv[0])
 		sys.exit(1)
-
-	if mysql:
-		sys.stdout.write('SET NAMES utf8;\n\n');
 
 	if droptables:
 		dropped={}

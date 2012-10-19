@@ -1,11 +1,11 @@
 
-cart
+cart:
 id      INT -* N
 user_id INT - N users.id
 name    A 64 N
 days    FLOAT - N
 
-cart_item
+cart_item:
 id         INT -* N
 cart       INT - N cart.id	--cart.id
 product    INT - N product.id
@@ -14,7 +14,7 @@ price      FLOAT - Y
 unit       INT - N	--0:units;1:grams;2:mililitres
 multiplier FLOAT - Y
 
-consumption
+consumption:
 id       INT -* N
 user_id  INT - N users.id
 consumed TIMESTAMP - N
@@ -23,14 +23,14 @@ units    INT - Y
 weight   FLOAT - Y	--g
 volume   FLOAT - Y	--ml
 
-demographic_group
+demographic_group:
 id        INT -* N
 min_age   FLOAT - Y
 max_age   FLOAT - Y
 gender    INT - Y	--0:male;1:female
 pregnancy INT - Y	--0:no;1:pregnant;2:lactating
 
-email_queue
+email_queue:
 id          INT -* N
 created     TIMESTAMP - N
 template_id INT - Y email_templates.id
@@ -44,7 +44,7 @@ sent        TIMESTAMP - Y
 errormsg    TEXT - Y
 active      INT - N
 
-email_templates
+email_templates:
 id            INT -* N
 name          A 16 N
 description   A 256 Y
@@ -54,7 +54,7 @@ html          TEXT - Y
 queue_minutes INT - Y
 queue_tod     TIME - Y
 
-fd_descriptions
+fd_descriptions:
 NDB_No      INT - Y
 FdGrp_Cd    INT - Y
 Long_Desc   A 256 Y
@@ -70,11 +70,11 @@ Pro_Factor  FLOAT8 - Y
 Fat_Factor  FLOAT8 - Y
 X           FLOAT8 - Y
 
-fd_groups
+fd_groups:
 FdGrp_Cd   INT - Y
 FdGrp_Desc A 64 Y
 
-fd_nutrients
+fd_nutrients:
 NDB_No      INT - Y
 Shrt_Desv   A 64 Y
 Water       FLOAT8 - Y	--Water (g)
@@ -126,7 +126,7 @@ GmWt_2      FLOAT8 - Y
 GmWt_Desc2  A 64 Y
 Refuse_Pct  FLOAT8 - Y	--Refuse (%)
 
-fd_weights
+fd_weights:
 NDB_No       INT - Y
 Seq          INT - Y
 Amount       FLOAT8 - Y
@@ -135,7 +135,7 @@ Gm_Wgt       FLOAT8 - Y
 Num_Data_Pts INT - Y
 Std_Dev      FLOAT8 - Y
 
-log_database
+log_database:
 id         INT -* N
 time       TIMESTAMP - N
 request_id INT - N
@@ -144,11 +144,11 @@ table      A 32 N
 table_id   INT - N
 changes    TEXT - N
 
-log_hosts
+log_hosts:
 id   INT -* N
 host A 64 N
 
-log_requests
+log_requests:
 id              INT -* N
 date            TIMESTAMP - N
 client_ip       A 15 N
@@ -161,7 +161,7 @@ user_agent_id   INT - Y log_user_agents.id
 session_id      INT - Y log_sessions.id
 user_id         INT - Y users.id
 
-log_sessions
+log_sessions:
 id      INT -* N
 phpid   A 32 Y
 data    TEXT - N
@@ -170,16 +170,16 @@ started TIMESTAMP - Y
 ended   TIMESTAMP - Y
 expiry  TIMESTAMP - Y
 
-log_urls
+log_urls:
 id      INT -* N
 host_id INT - N
 uri     A 255 N
 
-log_user_agents
+log_user_agents:
 id   INT -* N
 name A 255 N
 
-nutrient
+nutrient:
 id          INT -* N
 order       INT - N
 column      INT - N
@@ -190,7 +190,7 @@ unit        A 8 N
 decimals    INT - N
 basetable   INT - N
 
-person
+person:
 id       INT -* N
 user_id  INT - N
 name     A 64 N
@@ -206,7 +206,7 @@ afm      A 9 Y
 doy      A 48 Y
 notes    TEXT - Y
 
-product
+product:
 id                      INT -* N
 user_id                 INT - Y
 parent                  INT - Y product.id	--product
@@ -298,7 +298,7 @@ silicon                 FLOAT - Y	--μg
 vanadium                FLOAT - Y	--μg
 sulfate                 FLOAT - Y	--mg
 
-product_nutrient
+product_nutrient:
 id       INT -* N
 product  INT - N product.id
 nutrient INT - N nutrient.id
@@ -306,7 +306,7 @@ value    FLOAT - Y
 source   INT - N	--0:manual;1:product;2:children;3:fooddb
 id2      INT - Y
 
-receipt
+receipt:
 id         INT -* N
 user_id    INT - N users.id
 parent     INT - Y receipt.id	--receipt
@@ -323,17 +323,17 @@ net_weight FLOAT - Y	--g
 net_volume FLOAT - Y	--ml
 notes      TEXT - Y
 
-right
+right:
 id          INT -* N
 name        A 20 N
 expression  A 64 N
 description TEXT - Y
 
-storage_conditions
+storage_conditions:
 id          INT -* N
 description A 64 N
 
-store
+store:
 id       INT -* N
 owner    INT - Y person.id
 name     A 127 N
@@ -344,7 +344,7 @@ phone2   A 16 Y
 fax      A 16 Y
 notes    TEXT - Y
 
-threshold
+threshold:
 id                INT -* N
 demographic_group INT - Y demographic_group.id
 user              INT - Y users.id
@@ -353,7 +353,7 @@ min               FLOAT - Y
 best              FLOAT - Y
 max               FLOAT - Y
 
-usda_data_src
+usda_data_src:
 DataSrc_ID  A 6* N	--Unique number identifying the reference/source.
 Authors     A 255 Y	--List of authors for a journal article or name of sponsoring organization for other documents.
 Title       A 255 N	--Title of article or name of document, such as a report from a company or trade association.
@@ -364,20 +364,20 @@ Issue_State A 5 Y	--Issue number for journal article; State where the sponsoring
 Start_Page  A 5 Y	--Starting page number of article/document.
 End_Page    A 5 Y	--Ending page number of article/document.
 
-usda_datsrcln
+usda_datsrcln:
 NDB_No     A 5* N usda_food_des.NDB_No	--5-digit Nutrient Databank number.
 Nutr_No    A 3* N usda_nutr_def.Nutr_No	--Unique 3-digit identifier code for a nutrient.
 DataSrc_ID A 6* N usda_data_src.DataSrc_ID	--Unique ID identifying the reference/source.
 
-usda_deriv_cd
+usda_deriv_cd:
 Deriv_Cd   A 4* N	--Derivation Code.
 Deriv_Desc A 120 N	--Description of derivation code giving specific information on how the value was determined.
 
-usda_fd_group
+usda_fd_group:
 FdGrp_Cd   A 4* N	--4-digit code identifying a food group. Only the first 2 digits are currently assigned. In the future, the last 2 digits may be used. Codes may not be consecutive.
 FdGrp_Desc A 60 N	--Name of food group.
 
-usda_food_des
+usda_food_des:
 NDB_No      A 5* N	--5-digit Nutrient Databank number that uniquely identifies a food item. If this field is defined as numeric, the leading zero will be lost.
 FdGrp_Cd    A 4 N usda_fd_group.FdGrp_Cd	--4-digit code indicating food group to which a food item belongs.
 Long_Desc   A 200 N	--200-character description of food item.
@@ -393,22 +393,22 @@ Pro_Factor  N 4.2 Y	--Factor for calculating calories from protein (see p.  13).
 Fat_Factor  N 4.2 Y	--Factor for calculating calories from fat (see p. 13).
 CHO_Factor  N 4.2 Y	--Factor for calculating calories from carbohydrate (see p. 13).
 
-usda_footnote
+usda_footnote:
 NDB_No     A 5 N usda_food_des.NDB_No	--5-digit Nutrient Databank number.
 Footnt_No  A 4 N	--Sequence number. If a given footnote applies to more than one nutrient number, the same footnote number is used.  As a result, this file cannot be indexed.
 Footnt_Typ A 1 N	--Type of footnote: D = footnote adding information to the food description; M = footnote adding information to measure description; N = footnote providing additional information on a nutrient value. If the Footnt_typ = N, the Nutr_No will also be filled in
 Nutr_No    A 3 Y	--Unique 3-digit identifier code for a nutrient to which footnote applies.
 Footnt_Txt A 200 N	--Footnote text.
 
-usda_langdesc
+usda_langdesc:
 Factor_Code A 5* N	--The LanguaL factor from the Thesaurus. Only those codes used to factor the foods contained in the LanguaL Factor file are included in this file
 Description A 140 N	--The description of the LanguaL Factor Code from the thesaurus
 
-usda_langual
+usda_langual:
 NDB_No      A 5* N usda_food_des.NDB_No	--5-digit Nutrient Databank number that uniquely identifies a food item. If this field is defined as numeric, the leading zero will be lost.
 Factor_Code A 5* N usda_langdesc.Factor_Code	--The LanguaL factor from the Thesaurus
 
-usda_nut_data
+usda_nut_data:
 NDB_No        A 5* N usda_food_des.NDB_No	--5-digit Nutrient Databank number.
 Nutr_No       A 3* N usda_nutr_def.Nutr_No	--Unique 3-digit identifier code for a nutrient .
 Nutr_Val      N 10.3 N	--Amount in 100 grams, edible portion .
@@ -428,7 +428,7 @@ Stat_cmt      A 10 Y	--Statistical comments. See definitions below.
 AddMod_Date   A 10 Y	--Indicates when a value was either added to the database or last modified.
 CC            A 1 Y	--Confidence Code indicating data quality, based on evaluation of sample plan, sample handling, analytical method, analytical quality control, and number of samples analyzed. Not included in this release, but is planned for future releases.
 
-usda_nutr_def
+usda_nutr_def:
 Nutr_No  A 3* N	--Unique 3-digit identifier code for a nutrient.
 Units    A 7 N	--Units of measure (mg, g, g, and so on).
 Tagname  A 20 Y	--International Network of Food Data Systems (INFOODS) Tagnames. A unique abbreviation for a nutrient/food component developed by INFOODS to aid in the interchange of data.
@@ -436,11 +436,11 @@ NutrDesc A 60 N	--Name of nutrient/food component.
 Num_Dec  A 1 N	--Number of decimal places to which a nutrient value is rounded.
 SR_Order N 6 N	--Used to sort nutrient records in the same order as various reports produced from SR.
 
-usda_src_cd
+usda_src_cd:
 Src_Cd     A 2* N	--2-digit code.
 SrcCd_Desc A 60 N	--Description of source code that identifies the type of nutrient data.
 
-usda_weight
+usda_weight:
 NDB_No       A 5* N usda_food_des.NDB_No	--5-digit Nutrient Databank number.
 Seq          A 2* N	--Sequence number.
 Amount       N 5.3 N	--Unit modifier (for example, 1 in "1 cup").
@@ -449,11 +449,11 @@ Gm_Wgt       N 7.1 N	--Gram weight.
 Num_Data_Pts N 3 Y	--Number of data points.
 Std_Dev      N 7.3 Y	--Standard deviation.
 
-user_right
+user_right:
 user  INT -* N users.id
 right INT -* N right.id
 
-users
+users:
 id                INT -* N
 username          A 12 N
 password          A 40 N

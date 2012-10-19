@@ -4,6 +4,8 @@ import MySQLdb
 import MySQLdb.connections
 import MySQLdb.cursors
 
+short_format=1
+
 def sqlid(s):
 	return '`'+s.replace('`','``')+'`'
 
@@ -37,7 +39,7 @@ def eatprefix(x,y):
 
 if __name__=='__main__':
 	if len(sys.argv)<2:
-		sys.stderr.write('symtax: %s [//HOST/]DATABASE[/PREFIX]\n')
+		sys.stderr.write('syntax: %s [//HOST/]DATABASE[/PREFIX]\n'%sys.argv[0])
 		sys.exit(1)
 
 	host = 'localhost'
@@ -80,7 +82,9 @@ if __name__=='__main__':
 
 		c.execute('SHOW FULL COLUMNS FROM '+sqlid(tableprefix+table))
 
-		sys.stdout.write('\n'+table+'\n')
+		sys.stdout.write('\n')
+		if short_format:
+			sys.stdout.write(table+':\n')
 
 		cols = c.fetchall()
 
@@ -135,7 +139,11 @@ if __name__=='__main__':
 			else:
 				ref = ''
 
-			sys.stdout.write('%s%s %s %s%s %s%s%s\n'%(name, ' '*(maxlen-len(col[0])), typename, '.'.join(size),pri, nullable, ref, comment))
+			if short_format:
+				tn = name
+			else:
+				tn = table+'.'+name
+			sys.stdout.write('%s%s %s %s%s %s%s%s\n'%(tn, ' '*(maxlen-len(col[0])), typename, '.'.join(size),pri, nullable, ref, comment))
 
 	c.close()
 
