@@ -215,59 +215,6 @@ function product_nutrient_link_to_children($prodid,$nutid,$nutname=null) {
 	product_nutrient_on_change($prodid,$nutid,$value,$nutname);
 }
 
-$fooddb_mapping = array(
-	'refuse_weight'=>'Refuse_Pct',
-	'water'=>'Water',
-	'energy'=>'Energ_Kcal',
-	'proteins'=>'Protein',
-	'fats'=>'Lipid_Tot',
-	'fats_saturated'=>'FA_Sat',
-	'fats_monounsaturated'=>'FA_Mono',
-	'fats_polyunsaturated'=>'FA_Poly',
-	'ash'=>'Ash',
-	'carbohydrates'=>'Carbohydrt',
-	'total_fiber'=>'Fiber_TD',
-	'sugars'=>'Sugar_Tot',
-	'calcium'=>'Calcium',
-	'iron'=>'Iron',
-	'magnesium'=>'Magnesium',
-	'phosphorus'=>'Phosphorus',
-	'potassium'=>'Potassium',
-	'sodium'=>'Sodium',
-	'zinc'=>'Zinc',
-	'copper'=>'Copper',
-	'manganese'=>'Manganese',
-	'selenium'=>'Selenium',
-	'c'=>'Vit_C',
-	'b1'=>'Thiamin',
-	'b2'=>'Riboflavin',
-	'b3'=>'Niacin',
-	'b5'=>'Panto_acid',
-	'b6'=>'Vit_B6',
-	'folic_acid'=>'Folic_acid',
-	'folate'=>'Food_Folate',
-	'b9'=>'Folate_DFE',
-	'b12'=>'Vit_B12',
-	'a'=>'Vit_A_RAE',
-	'retinol'=>'Retinol',
-	'alpha_carotene'=>'Alpha_Carot',
-	'beta_carotene'=>'Beta_Carot',
-	'beta_cryptoxanthin'=>'Beta_Crypt',
-	'lycopene'=>'Lycopene',
-	'lutein_zeaxanthin'=>'Lut+Zea',
-	'e'=>'Vit_E',
-	'k'=>'Vit_K',
-	'cholesterol'=>'Cholestrl',
-);
-
-$fooddb_multipliers = array(
-	'sodium'=>0.001,
-	'potassium'=>0.001,
-	'b9'=>0.001,
-	'folic_acid'=>0.001,
-	'folate'=>0.001,
-);
-
 function product_nutrient_link_multiplier($prodid,$parentid) {
 	$par = row('sample_weight,sample_volume,refuse_weight,refuse_volume'
 	           .' FROM product WHERE id='.sql($parentid));

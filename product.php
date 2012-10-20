@@ -147,7 +147,7 @@
 				$addit = '';
 			}
 
-			$row['id'] = store('product.id',$row);
+			$row['id'] = (int)store('product.id',$row);
 			if (success('?id='.urlencode($row['id']).$addit)) return true;
 		}
 	} catch (Exception $x) {
@@ -218,11 +218,13 @@
 <? begin_form() ?>
 <table class="fields">
 	<? if ($RO) { ?>
-	<? if ($row['barcode']!==null) { ?>
 	<tr><th>B/C:</th><td>
-		<?=input('barcode',$row,13,$RO)?>
+		<? if ($row['barcode']!==null) { ?>
+			<?=input('barcode',$row,13,$RO)?>
+		<? } else { ?>
+			(unknown / unregistered)
+		<? } ?>
 	</td></tr>
-	<? } ?>
 	<? } else { ?>
 	<tr><th>Name:</th><td>
 		<?=input('name',$row,array(40,64),$RO)?>
@@ -271,37 +273,32 @@
 					.html($x['name'])
 				.'</a>';
 			} else {
-				echo html($x['name']);
+				echo '<strong>'.html($x['name']).'</strong>';
 			}
 		}
 		if (!$j) {
 			echo '(none)';
-		}
-		if ($RO) {
-			echo '<span class="noprint">';
-			echo '<br />';
-			echo '<a href="'.html('?parent='.$row['id']).'">New variation</a>';
-			echo '</span>';
+			if ($RO) {
+				echo '<span class="noprint">';
+				echo ' <a href="'.html('?parent='.$row['id']).'">[add new]</a>';
+				echo '</span>';
+			}
 		}
 	?></td></tr>
 </table>
 
 <table class="fields">
-	<? if (!$RO || $row['maker']) { ?>
 	<tr><th>Manufacturer:</th><td><?= person_select_html('maker',$row,$RO,'(anyone or unknown)') ?></td></tr>
-	<? } ?>
 
-	<? if (!$RO || $row['packager']) { ?>
 	<tr><th>Packager:</th><td><?= person_select_html('packager',$row,$RO,'(anyone or unknown)') ?></td></tr>
-	<? } ?>
 
-	<? if (!$RO || $row['importer']) { ?>
+	<? /*if (!$RO || $row['importer']) { ?>
 	<tr><th>Importer:</th><td><?= person_select_html('importer',$row,$RO,'(anyone or unknown)') ?></td></tr>
-	<? } ?>
+	<? }*/ ?>
 
-	<? if (!$RO || $row['distributor']) { ?>
+	<? /*if (!$RO || $row['distributor']) { ?>
 	<tr><th>Distributor:</th><td><?= person_select_html('distributor',$row,$RO,'(anyone or unknown)') ?></td></tr>
-	<? } ?>
+	<? }*/ ?>
 
 	<? if (!$RO || $row['typical_price'] || !$row['price_no_recalc']) { ?>
 	<tr<?=$row['typical_price']?'':' class="noprint"'?>><th>Ex.price:</th><td>
@@ -317,8 +314,7 @@
 			<?=checkbox('price_no_recalc',$row,
 				    'do not auto-update',$RO)?>
 		<? } else { ?>
-			<?=html($row['typical_price'])?>€
-			&nbsp;
+			<?=($row['typical_price']!==null) ? html($row['typical_price']).'€&nbsp;' : ''?>
 			<button id="<?=html($ID.'_calc_typicals')?>"
 				type="submit"
 				onclick="<?=html('return post_form('
@@ -335,7 +331,11 @@
 
 	<? if (!$RO || ($row['typical_units']!==null && ($row['type']!=3 || $row['typical_units']!=1))) { ?>
 	<tr><th>Units:</th><td>
-		<?=number_input('typical_units',$row,null,$RO)?>
+		<? if ($RO) { ?>
+			<?=html($row['typical_units'])?>
+		<? } else { ?>
+			<?=number_input('typical_units',$row,null,$RO)?>
+		<? } ?>
 
 		<? if ($row['type']!=3 || $row['type']===null) { ?>
 			units, packages, rations or pairs
@@ -363,19 +363,32 @@
 		if ($row['type']!=3 || $row['type']===null) {
 			echo '℮ ';
 		}
-		echo number_input('net_weight',$row,null,$RO).'g';
+		if ($RO) {
+			echo html($row['net_weight']);
+		} else {
+			echo number_input('net_weight',$row,null,$RO).'g';
+		}
 		if ($row['type']!=3 || $row['type']===null) {
 
 			if (!$RO || $row['glaze_weight']!==null) {
-				echo ' + <strong>glaze</strong> ';
-				echo number_input('glaze_weight',$row,null,$RO);
+				echo ' &nbsp; &nbsp; &nbsp; <strong>Glaze:</strong> ';
+				if ($RO) {
+					echo html($row['glaze_weight']);
+				} else {
+					echo number_input('glaze_weight',$row,null,$RO);
+				}
 				echo 'g';
 			}
 
 			if (!$RO || $row['packaging_weight']!==null) {
-				echo ' &nbsp; ( + packaging weight';
-				echo number_input('packaging_weight',
-						  $row,null,$RO).'g )';
+				echo ' &nbsp; &nbsp; &nbsp; <strong>Tare weight:</strong> ';
+				if ($RO) {
+					echo html($row['packaging_weight']);
+				} else {
+					echo number_input('packaging_weight',
+							  $row,null,$RO);
+				}
+				echo 'g';
 			}
 		}
 	?></td></tr>
@@ -437,10 +450,7 @@
 
 	<? if (!$RO || $row['ingredients']!==null || $row['type']==1) { ?>
 	<tr><th>Description:</th><td>
-		<?= $RO
-			? '<div style="width: 48em; font-family: monospace">'.html($row['ingredients']).'</div>'
-			: textarea('ingredients',$row,64,5,$RO)
-		?>
+		<?=textarea('ingredients',$row,64,5,$RO)?>
 
 		<? if ($RO && $row['type']==1) {
 			echo '<div class="noprint">';

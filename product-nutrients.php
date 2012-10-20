@@ -2,13 +2,19 @@
 	require_once 'app/init.php';
 
 	$proto = array(
+		'usda_source'=>array('zeropad()',array(),5,  ''=>null),
 		'sample_weight'=>'float',
 		'sample_volume'=>'float',
 		'refuse_weight'=>'float',
 		'refuse_volume'=>'float',
 	);
-	foreach (col('name FROM nutrient WHERE basetable') as $name)
-		$proto[$name] = 'float';
+	$nutids=array();
+	$basetables=array();
+	foreach (select('id,name,basetable FROM nutrient WHERE basetable') as $x) {
+		$proto[$x['name']] = 'float';
+		$nutids[$x['name']] = $x['id'];
+		if ($x['basetable']) $basetables[$x['name']] = true;
+	}
 	$row = given('product.id', $proto);
 
 	$old = fetch('product.id', $row);
@@ -17,38 +23,55 @@
 	                && $old['user_id']==$_SESSION['user_id'] ) || 
 	              has_right('admin');
 
-	function product_fooddb_import($prodid,$fdbid) {
-		global $fooddb_mapping;
-		global $fooddb_multipliers;
+	function product_fooddb_import($prodid) {
+		$pro = fetch('product.id',$prodid);
+		if ($pro===null) return;
 
-		$pro = row('* FROM product WHERE id='.sql($prodid));
-
-		$fdb = row0('* FROM fd_nutrients WHERE NDB_No='.sql($fdbid));
-		if ($fdb===null) throw new Exception('FOODDB ID does not exist: '.intval($fdbid));
+		$ndb_no = $pro['usda_source'];
+		$fdb = row0('* FROM usda_food_des WHERE NDB_No='.sql($ndb_no));
+		if ($fdb===null) throw new Exception('USDA food ID '.repr($ndb_no).' was not found in database');
 
 		$product = array(
 			'id'=>$prodid,
 		);
 
-		if ($pro['sample_weight']===null)
+		if ($pro['sample_weight']===null) {
 			$product['sample_weight'] = 100.0;
-		else
-			$product['sample_weight'] = $pro['sample_weight'];
+			$sw  = 100.0;
+		} else {
+			$sw = $pro['sample_weight'];
+		}
 
-		$multiplier = $product['sample_weight']/100.0;
+		$multiplier = $sw/100.0;
 
-		$product['refuse_weight'] = $fdb['Refuse_Pct']*$multiplier;
+		$product['refuse_weight'] = $fdb['Refuse']*$multiplier;
 
-		foreach (select('* FROM nutrient') as $nut) {
-			$mapping = $fooddb_mapping[$nut['name']];
+		execute('UPDATE nutrient SET unit='.sql("\xc2\xb5g").' WHERE unit='.sql("\xce\xbcg"));  # this needs to stay here
+
+		foreach (select('id,tag,unit,basetable,name FROM nutrient') as $nut) {
+			$ns = select('d.Nutr_Val AS value, n.Units AS unit'
+			             .' FROM usda_nutr_def n JOIN usda_nut_data d ON n.Nutr_No=d.Nutr_No'
+			             .' WHERE n.Tagname='.sql($nut['tag']).' AND d.NDB_No='.sql($ndb_no));
+			$n = null;
+			foreach ($ns as $n1) {
+				// XXX multiply/divide?
+				if ($n1['unit']==$nut['unit']) {
+					$n = $n1;
+					break;
+				//} else {
+				//	error_log('UNITS DIFFER: '.repr($nut['tag']).' '.repr($n['unit']).' '.repr($nut['unit']));
+				}
+			}
+			if ($n===null) {
+				continue;
+			}
+
 			$pn = row0('* FROM product_nutrient'
 				   .' WHERE product='.sql($prodid)
 				   .' AND nutrient='.sql($nut['id']));
-			if ($mapping!==null && $fdb[$mapping]!==null && $pn===null) {
-				$value = $fdb[$mapping]*$multiplier;
-				if ($fooddb_multipliers[$nut['name']]!==null) {
-					$value *= $fooddb_multipliers[$nut['name']];
-				}
+			if ($pn===null || $pn['value']===null) {
+				$value = $n['value']*$multiplier;
+
 				store('product_nutrient.id',array(
 					'product'=>$prodid,
 					'nutrient'=>$nut['id'],
@@ -56,14 +79,15 @@
 					'source'=>3,
 					'id2'=>$fdbid,
 				));
+
 				if ($nut['basetable']) {
 					$product[$nut['name']] = $value;
 				}
+
 				product_nutrient_on_change($prodid,$nut['id'],$value);
 			}
 		}
-
-		update('product.id',$product);
+		store('product.id',$product);
 	}
 
 	function product_parent_link($prodid,$parentid) {
@@ -71,7 +95,7 @@
 
 		if ($multiplier===null) {
 			$par = row('* FROM product WHERE id='.sql($parentid));
-			put('product.id',array(
+			store('product.id',array(
 				'id'=>$prodid,
 				'sample_weight'=>$par['sample_weight'],
 				'sample_volume'=>$par['sample_volume'],
@@ -85,7 +109,7 @@
 			$pn = row0('* FROM product_nutrient'
 				   .' WHERE product='.sql($prodid)
 				   .' AND nutrient='.sql($nut['id']));
-			if ( $pn===null || ($pn['value']===null && !$pn['source']) ) {
+			if ( $pn===null || ($pn['value']===null && $pn['source']==0) ) {
 				product_nutrient_link($prodid,$nut,$parentid,
 						      $multiplier);
 			}
@@ -97,7 +121,7 @@
 			$pn = row0('* FROM product_nutrient'
 				   .' WHERE product='.sql($prodid)
 				   .' AND nutrient='.sql($nut['id']));
-			if ( $pn===null || ($pn['value']===null && !$pn['source']) ) {
+			if ( $pn===null || ($pn['value']===null && $pn['source']==0) ) {
 				product_nutrient_link_to_children(
 					$prodid, $nut['id'], $nut['name']
 				);
@@ -135,7 +159,7 @@
 			throw Exception('you are not allowed to edit this record');
 
 		if ($_POST['fooddb_import']) {
-			product_fooddb_import($row['id'], $old['usda_source']);
+			product_fooddb_import($row['id']);
 			if (success('')) return true;
 
 		} else if ($_POST['fooddb_clear']) {
@@ -143,7 +167,7 @@
 			if (success('')) return true;
 
 		} else if ($_POST['parent_link']) {
-			product_parent_link($row['id'], $old['parent']);
+			product_parent_link($row['id'],$old['parent']);
 			if (success('')) return true;
 
 		} else if ($_POST['parent_clear']) {
@@ -193,24 +217,33 @@
 			}
 
 			if (correct()) {
-				$row['id'] = (int)store('product.id',$row);
-				foreach (select('* FROM nutrient') as $nut) {
-					if (array_key_exists($nut['name'],$row)) {
+				$row2 = array();
+				foreach ($row as $name => $value) {
+					if ($nutids[$name]===null) {
+						$row2[$name] = $value;
+					} else {
 						$pn = row0('* FROM product_nutrient'
 							   .' WHERE product='.sql($row['id'])
-							   .' AND nutrient='.sql($nut['id']));
-						if ($pn===null) {
+							   .' AND nutrient='.sql($nutids[$name]));
+						if ($pn==null) {
 							$pn = array(
 								'product'=>$row['id'],
-								'nutrient'=>$nut['id'],
+								'nutrient'=>$nutids[$name],
+								'source'=>0,
 							);
 						}
-						$pn['value'] = $row[$nut['name']];
 
-						store('product_nutrient.product.nutrient',$pn);
-						product_nutrient_on_change($row['id'],$nut['id'],$value);
+						if ($pn['source']==0) {
+							if ($basetables[$name]) $row2[$name] = $value;
+							$pn['value'] = $value;
+							store('product_nutrient.id',$pn);
+							product_nutrient_on_change($row['id'],$nutids[$name],$value);
+						}
 					}
 				}
+				$row = $row2;
+
+				$row['id'] = (int)store('product.id',$row);
 
 				if (success('?id='.urlencode($row['id']))) return true;
 			}
@@ -221,12 +254,26 @@
 
 	$MODE = $row['id'];
 	$row = fetch('product.id',$row);
+
+	if ($row['usda_source']===null) {
+		$usda_sources = col('id2 FROM product_nutrient WHERE product='.sql($row['id']).' AND source=3 GROUP BY id2');
+		if (count($usda_sources)==1) {
+			$row['usda_source'] = zeropad($usda_sources[0],5);
+		}
+	}
+
 	if ($MODE[0]=='+') {
 		$HEADING = 'Nutritional information for '.html($row['name']);
 		$RO = 0;
 	} else {
 		$HEADING = 'Nutritional information for <a href="'.html('product?id='.urlencode($row['id'])).'">'.html($row['name']).'</a>';
 		$RO = 1;
+
+		if ($row['usda_source']!==null) {
+			$usda_text = ifnull(value0('Long_Desc FROM usda_food_des WHERE NDB_No='.sql($row['usda_source'])),'???');
+		} else {
+			$usda_text = implode(', ', $usda_sources);
+		}
 	}
 ?>
 <? include 'app/begin.php' ?>
@@ -269,7 +316,7 @@
 </tr></table>
 
 <table class="fields">
-	<th>USDA ID:</th><td><?=number_input('usda_source',null,null,$RO)?></td>
+	<th>USDA ID:</th><td><?=input('usda_source',$row,5,$RO).($RO ? ' '.html($usda_text) :'')?></td>
 
 	<tr><th>Sample:</th><td>
 		<? if (!$RO || $row['sample_weight']!==null) { ?>
@@ -302,10 +349,18 @@
 				$name = $nut['name'];
 				$value = $row[$nut['name']];
 
-				if ($pn['source']>0) {
-					echo '<tr class="linked">';
-				} else if ($value===null) {
-					echo '<tr class="empty">';
+				$class=array();
+
+				if ($pn['source']==3) {
+					$class[]='ndb';
+				} else if ($pn['source']>0) {
+					$class[]='linked';
+				} else if (!$RO) {
+					$class[]='editing';
+				}
+				if ($value===null) $class[]='empty';
+				if (count($class)) {
+					echo '<tr class="'.html(implode(' ',$class)).'">';
 				} else {
 					echo '<tr>';
 				}

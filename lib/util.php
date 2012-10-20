@@ -1,7 +1,26 @@
 <?php
 function repr(&$x) {
-	# FIXME reduce verbosity
-	return var_export($x, TRUE);
+	switch (gettype($x)) {
+	case 'NULL':
+	case 'integer':
+	case 'integer':
+	case 'string':
+	default:
+		return var_export($x, TRUE);
+	case 'array':
+		$s='array(';
+		$i=0;
+		foreach ($x as $a=>$b) {
+			if ($i) $s.=',';
+			if ($a===$i) {
+				$s.=repr($b);
+			} else {
+				$s.=repr($a).'=>'.repr($b);
+			}
+			++$i;
+		}
+		return $s.')';
+	}
 }
 
 function array_head($a) {
@@ -52,6 +71,12 @@ function smart_implode($separator, $strings) {
 		}
 	}
 	return implode($separator, $a);
+}
+
+function zeropad($s,$n) {
+	while (strlen($s)<$n)
+		$s = '0'.$s;
+	return $s;
 }
 
 function ifnull($x,$y) {

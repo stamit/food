@@ -2,8 +2,9 @@
 	require_once 'app/init.php';
 	$_SESSION['alert'] = 'This is an alert message.';
 
+	function trimit($x) { return substr($x,1); }
 	$row = given('test.id', array(
-		'a'=>123,
+		'a'=>array('trimit','str1','nonull',  'x'=>'foobar'),
 	));
 	error_log(repr($row));
 ?>

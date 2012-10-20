@@ -536,102 +536,11 @@ function given($a, $b, $ins_defaults=false) {
 			$fieldname = $a;
 			$fun = $b;
 			$x = given_field($fieldname,$tablename);
-
-			switch (gettype($fun)) {
-			case 'array':
-				#
-				# numbers and strings starting with digits are to be prefixed with an extra '0' in mapping
-				#
-				if ( is_int($x) || (is_string($x) && strval(intval($x[0]))==$x[0]) ) {
-					$xx = '0'.strval($x);
-				} else {
-					$xx = strval($x);
-				}
-
-				if (array_key_exists($xx,$fun)) {
-					$record[$fieldname] = $fun[$xx];
-					$fun = null;
-				} else {
-					#
-					# construct arguments for function call
-					# $x is inserted exactly once
-					#
-					$args = array();
-					$i = 1;
-					while (array_key_exists($i,$fun)) {
-						$args[] = $fun[$i];
-						++$i;
-					}
-					$args[] = $x;
-					++$i;
-					while (array_key_exists($i,$fun)) {
-						$args[] = $fun[$i];
-						++$i;
-					}
-
-					error_log(repr($fun).' '.repr($xx).' '.repr($args));
-
-					if (count($args)>1) {
-						$record[$fieldname] = call_user_func_array($fun[0], $args);
-						$fun = null;
-					} else {
-						$fun = $fun[0];
-					}
-				}
-				break;
-			case 'string':
-				break;
-			default:
-				$fun = gettype($fun);
-			}
-
-			switch ($fun) {
-			case null:  # ignore field
-				break;
-
-			case 'bool': case 'boolean':
-				if ($x===null) {  # XXX what else can be done here?
-					$x = (given_field($fieldname.'___OFF__',$tablename)!==null)?'0':null;
-				}
-				if ($x!==null) {
-					$x = trim($x);
-					$record[$fieldname] = ($x!=0) ? true : false;
-				}
-				break;
-			case 'int': case 'integer':
-				if ($x!==null) {
-					$x = trim($x);
-					if ($x!=='') {
-						$record[$fieldname] = intval($x);
-					}
-				}
-				break;
-			case 'double': case 'float': case 'real':
-				if ($x!==null) {
-					$x = trim($x);
-					if ($x!=='') {  # XXX user's locale settings?
-						$record[$fieldname] = floatval(str_replace(',','.',$x));
-					}
-				}
-				break;
-			case '': case 'str': case 'string':
-				if ($x!==null) {
-					$record[$fieldname] = strval($x);
-				}
-				break;
-			case 'str1':
-				if ($x!==null) {
-					$record[$fieldname] = ($x!=='') ? strval($x) : null;
-				}
-				break;
-			default:
-				if ($x!==null) {
-					$record[$fieldname] = $fun($x);
-				}
+			if (field_fun($fun,&$x,$fieldname,$tablename)) {
+				$record[$fieldname] = $x;
 			}
 		}
 	}
-
 	return $record;
 }
 
@@ -641,6 +550,136 @@ function given_field($field_name,$table_name) {
 	if ($value === null) $value = post($field_name);
 	if ($value === null && $table_name!==null) $value = post($table_name.'_'.$field_name);  # FIXME ?
 	return $value;
+}
+
+function field_fun($fun,&$x,$fieldname,$tablename) {
+	switch (gettype($fun)) {
+	case 'array':
+		#
+		# numbers and strings starting with digits are to be prefixed with an extra '0' in mapping
+		#
+		if ( is_int($x) || (is_string($x) && strval(intval($x[0]))==$x[0]) ) {
+			$xx = '0'.strval($x);
+		} else {
+			$xx = strval($x);
+		}
+
+		if (array_key_exists($xx,$fun)) {
+			$x = $fun[$xx];
+			return true;
+		} else {
+			$i = 0;
+			$z = null;
+			while (array_key_exists($i,$fun)) {
+				if (is_string($fun[$i]) && substr($fun[$i], strlen($fun[$i])-2, 2)==='()') {
+					$newfun = substr($fun[$i], 0, strlen($fun[$i])-2);
+					break;
+				} else if (!field_fun($fun[$i],$x,$fieldname,$tablename)) {
+					return false;
+				}
+				++$i;
+			}
+			if ($newfun===null) {
+				return true;
+			}
+
+			# rest of items are function parameters
+			$args = array();
+			$j = $i+1;
+			while (array_key_exists($j,$fun)) {
+				if (is_array($fun[$j])) {
+					if (!count($fun[$j])) {
+						$args[] = $x;
+					} else {
+						$y = $x;
+						field_fun($fun[$j],&$y,$fieldname,$tablename);
+						$args[] = $y;
+					}
+				} else {
+					$args[] = $fun[$j];
+				}
+				++$j;
+			}
+
+			$fun = $newfun;
+
+			if (count($args)>1) {
+				if ($fun===null) {
+					$x = $args;
+				} else {
+					$x = call_user_func_array($fun, $args);
+				}
+				return true;
+			} else if (count($args)==1) {
+				$x = $args[0];
+			}
+		}
+		break;
+	case 'string':
+		break;
+	default:
+		$fun = gettype($fun);
+	}
+
+	switch ($fun) {
+	case null:  # identity
+		return true;
+	case 'nonull':
+		return $x!==null;
+
+	case 'bool': case 'boolean':
+		if ($x===null) {  # XXX what else can be done here?
+			$x = (given_field($fieldname.'___OFF__',$tablename)!==null)?'0':null;
+		}
+		if ($x!==null) {
+			$x = trim($x);
+			$x = ($x!=0) ? true : false;
+			return true;
+		}
+		break;
+	case 'int': case 'integer':
+		if ($x!==null) {
+			$x = trim($x);
+			if ($x!=='') {
+				$x = intval($x);
+			} else {
+				$x = null;
+			}
+			return true;
+		}
+		break;
+	case 'double': case 'float': case 'real':
+		if ($x!==null) {
+			$x = trim($x);
+			if ($x!=='') {  # XXX user's locale settings?
+				$x = floatval(str_replace(',','.',$x));
+			} else {
+				$x = null;
+			}
+			return true;
+		}
+		break;
+	case '': case 'str': case 'string':
+		if ($x!==null) {
+			$x = strval($x);
+			return true;
+		}
+		break;
+	case 'str1':
+		if ($x!==null) {
+			$x = strval($x);
+			if ($x==='') $x = null;
+			return true;
+		}
+		break;
+	default:
+		if ($x!==null) {
+			$x = $fun($x);
+			return true;
+		}
+	}
+	$x = null;
+	return false;
 }
 
 ?>
