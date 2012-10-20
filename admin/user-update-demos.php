@@ -11,10 +11,10 @@ foreach (select('* FROM users') as $user) {
 	$demo = find_demographic_group($user);
 	if ($olddemo != $demo) {
 		echo 'user '.$user['id'].': demo '.$olddemo.'=>'.$demo."\n";
-		put(array(
+		store('users.id',array(
 			'id'=>$user['id'],
 			'demographic_group'=>$demo
-		),'users');
+		));
 		$user['demographic_group'] = $demo;
 		execute('DELETE FROM threshold'
 		        .' WHERE user='.sql($user['id'])
