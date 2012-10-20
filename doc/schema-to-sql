@@ -34,6 +34,9 @@ writeforeignkeys = 1  # add "FOREIGN KEY"s when new schema has them but old does
 writedata = 1  # simple "INSERT" statements for data
 varchar_foreign_nulls = 1  # empty values for *foreign key* nullable VARCHAR fields will be turned into NULL, to avoid violating foreign key constraints
 varchar_normal_nulls = 0  # empty values for *all other* nullable VARCHAR fields will be turned into NULL
+input_encoding = 'iso8859-1'
+output_encoding = 'utf8'  # change this only if you know what you are doing
+mysql_table_charset = 'utf8'
 
 #
 # for MySQL
@@ -96,12 +99,12 @@ def readschema(f,fn):
 			if not line: break
 			lineno=lineno+1
 
-			line = line.strip('\r\n')
+			line = line.decode(input_encoding).encode(output_encoding).strip('\r\n')
 			if not line: continue
 
 			i = line.find('--')
 			if i<>-1:
-				line,comment = line[:i],line[i+2:]
+				line,comment = line[:i],line[i+2:].strip()
 			else:
 				comment = None
 
@@ -203,6 +206,8 @@ def readschema(f,fn):
 
 					if len(size)==2 and ftype<>'DECIMAL':
 						raise Exception('only DECIMAL fields can have 123.123 sizes')
+					if ftype=='DECIMAL' and len(size)==1:
+						size.append('0')
 
 					size = tuple(map(int,size))
 					if len(size)==1:
@@ -294,7 +299,7 @@ def print_table(tablename,fields):
 		lineno = lineno+1
 		line = f.readline()
 		if not line: break
-		line = line.rstrip('\r\n')
+		line = line.decode(input_encoding).encode(output_encoding).rstrip('\r\n')
 
 		state = 0
 		value = []
@@ -391,7 +396,7 @@ def print_schema(tablename,prevtables,tables,written):
 					commalist.append('FOREIGN KEY (%s) REFERENCES %s(%s)'%(sqlfield(f[0]),sqlfield(tableprefix+f[4][0]),sqlfield(f[4][1])))
 
 		if mysql:
-			extra = ' ENGINE = InnoDB';
+			extra = ' ENGINE = InnoDB, CHARACTER SET '+mysql_table_charset
 
 		if commalist:
 			if mysql: sys.stdout.write('SET NAMES utf8;\n');
@@ -407,29 +412,25 @@ def print_schema(tablename,prevtables,tables,written):
 		commalist = []
 		fa = None
 		for f in fields:
-			f2 = f[:4]+[None]+f[5:]
-			x = zip(prevfields,range(len(prevfields)))
-			pfs = filter(lambda pf: pf[0][0]==f[0], x)
+			pfs = filter(lambda pf: pf[0][0]==f[0], zip(prevfields,range(len(prevfields))))
 			if pfs:
+				pf = pfs[0][0]
 				if pfs[0][1]:
 					pfa = prevfields[pfs[0][1]-1][0]
 				else:
 					pfa = None
-				pf = pfs[0][0]
-				pf2 = pf[:4]+[None]+pf[5:]
+			else:
+				pf = None
+				pfa = None
 
-				if (f2,fa)<>(pf2,pfa):
+			if pf<>None:
+				if (f[:4]+f[5:],fa and fa[0])<>(pf[:4]+pf[5:],pfa and pfa[0]):
 					s = 'MODIFY COLUMN '+field_def(f)
 					if fa==None:
 						s = s + ' FIRST'
 					else:
 						s = s + ' AFTER ' + sqlfield(fa)
 					commalist.append(s)
-
-				if writeforeignkeys and pf[4]==None and f[4]<>None:
-					commalist.append('ADD FOREIGN KEY (%s) REFERENCES %s(%s)'%(sqlfield(f[0]),sqlfield(tableprefix+f[4][0]),sqlfield(f[4][1])))
-					if mysql:
-						extra = 'ENGINE = InnoDB'
 			else:
 				s = 'ADD COLUMN '+field_def(f)
 				if fa==None:
@@ -437,6 +438,12 @@ def print_schema(tablename,prevtables,tables,written):
 				else:
 					s = s + ' AFTER ' + sqlfield(fa)
 				commalist.append(s)
+
+			if writeforeignkeys and (pf==None or pf[4]==None) and f[4]<>None:
+				commalist.append('ADD FOREIGN KEY (%s) REFERENCES %s(%s)'%(sqlfield(f[0]),sqlfield(tableprefix+f[4][0]),sqlfield(f[4][1])))
+				if mysql:
+					extra = 'ENGINE = InnoDB, CHARACTER SET '+mysql_table_charset
+
 			fa = f[0]
 		for pf in prevfields:
 			fs = filter(lambda f: pf[0]==f[0], fields)
