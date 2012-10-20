@@ -69,16 +69,21 @@
 			$pn = row0('* FROM product_nutrient'
 				   .' WHERE product='.sql($prodid)
 				   .' AND nutrient='.sql($nut['id']));
-			if ($pn===null || $pn['value']===null) {
-				$value = $n['value']*$multiplier;
-
-				store('product_nutrient.id',array(
+			if ($pn===null) {
+				$pn = array(
 					'product'=>$prodid,
 					'nutrient'=>$nut['id'],
-					'value'=>$value,
-					'source'=>3,
+					'source'=>0,
+					'value'=>null,
 					'id2'=>$fdbid,
-				));
+				);
+			}
+			if ($pn['value']===null && $pn['source']==0) {
+				$value = $n['value']*$multiplier;
+
+				$pn['source'] = 3;
+				$pn['value'] = $value;
+				store('product_nutrient.id',$pn);
 
 				if ($nut['basetable']) {
 					$product[$nut['name']] = $value;
