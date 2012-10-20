@@ -243,6 +243,11 @@ table.fields tr.ndb input {
 	background-color: #FFFFFF;
 	color: #0000FF;
 }
+table.fields tr.ndb.empty,
+table.fields tr.ndb.empty input {
+	background-color: #FFFFFF;
+	color: #C0C0FF;
+}
 table.fields tr.linked,
 table.fields tr.linked input {
 	background-color: #FFFFFF;

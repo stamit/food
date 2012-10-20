@@ -62,9 +62,6 @@
 				//	error_log('UNITS DIFFER: '.repr($nut['tag']).' '.repr($n['unit']).' '.repr($nut['unit']));
 				}
 			}
-			if ($n===null) {
-				continue;
-			}
 
 			$pn = row0('* FROM product_nutrient'
 				   .' WHERE product='.sql($prodid)
@@ -79,7 +76,11 @@
 				);
 			}
 			if ($pn['value']===null && $pn['source']==0) {
-				$value = $n['value']*$multiplier;
+				if ($n!==null) {
+					$value = $n['value']*$multiplier;
+				} else {
+					$value = null;
+				}
 
 				$pn['source'] = 3;
 				$pn['value'] = $value;
@@ -92,28 +93,37 @@
 				product_nutrient_on_change($prodid,$nut['id'],$value);
 			}
 		}
+		$product['default_source'] = 3;
 		store('product.id',$product);
 	}
 
 	function product_parent_link($prodid,$parentid) {
-		$multiplier = product_nutrient_link_multiplier($prodid,$parentid);
+		$row = array(
+			'id'=>$prodid,
+			'default_source'=>1,
+		);
 
+		$multiplier = product_nutrient_link_multiplier($prodid,$parentid);
 		if ($multiplier===null) {
-			$par = row('* FROM product WHERE id='.sql($parentid));
-			store('product.id',array(
-				'id'=>$prodid,
-				'sample_weight'=>$par['sample_weight'],
-				'sample_volume'=>$par['sample_volume'],
-				'refuse_weight'=>$par['refuse_weight'],
-				'refuse_volume'=>$par['refuse_volume'],
-			));
+			$par = row0('* FROM product WHERE id='.sql($parentid));
+			if ($par!==null) {
+				$row['sample_weight'] = $par['sample_weight'];
+				$row['sample_volume'] = $par['sample_volume'];
+				$row['refuse_weight'] = $par['refuse_weight'];
+				$row['refuse_volume'] = $par['refuse_volume'];
+			} else {
+				$row['sample_weight'] = 100;
+				$row['sample_volume'] = null;
+				$row['refuse_weight'] = 0;
+				$row['refuse_volume'] = null;
+			}
 			$multiplier = 1.0;
 		}
 
+		store('product.id',$row);
+
 		foreach (select('* FROM nutrient') as $nut) {
-			$pn = row0('* FROM product_nutrient'
-				   .' WHERE product='.sql($prodid)
-				   .' AND nutrient='.sql($nut['id']));
+			$pn = fetch_product_nutrient($prodid,$nut['id']);
 			if ( $pn===null || ($pn['value']===null && $pn['source']==0) ) {
 				product_nutrient_link($prodid,$nut,$parentid,
 						      $multiplier);
@@ -123,15 +133,14 @@
 
 	function product_children_link($prodid) {
 		foreach (select('* FROM nutrient') as $nut) {
-			$pn = row0('* FROM product_nutrient'
-				   .' WHERE product='.sql($prodid)
-				   .' AND nutrient='.sql($nut['id']));
+			$pn = fetch_product_nutrient($prodid,$nut['id']);
 			if ( $pn===null || ($pn['value']===null && $pn['source']==0) ) {
 				product_nutrient_link_to_children(
 					$prodid, $nut['id'], $nut['name']
 				);
 			}
 		}
+		store('product.id',array('id'=>$prodid,'default_source'=>2));
 	}
 
 	function product_clearlink($prodid,$source) {
@@ -153,6 +162,7 @@
 				null
 			);
 		}
+		store('product.id',array('id'=>$prodid,'default_source'=>null));
 	}
 
 	if (posting()) try {
@@ -301,7 +311,13 @@
 		$variations = select('id,name FROM product WHERE parent='.sql($row['id']));
 	?>
 
-	<tr><th>Variations:</th><td><?
+	<tr><th>Variations:<?
+		if ($RO) {
+			echo '<span class="noprint">';
+			echo '<br /><a href="'.html('product?parent='.$row['id']).'">[add new]</a>';
+			echo '</span>';
+		}
+	?></th><td><?
 		$j = 0;
 		foreach ($variations as $i=>$x) {
 			if ($j) echo '<br />';
@@ -321,7 +337,7 @@
 </tr></table>
 
 <table class="fields">
-	<th>USDA ID:</th><td><?=input('usda_source',$row,5,$RO).($RO ? ' '.html($usda_text) :'')?></td>
+	<tr<?=$row['default_source']==3?' class="ndb"':''?>><th>USDA ID:</th><td><?=input('usda_source',$row,5,$RO).($RO ? ' '.html($usda_text) :'')?></td>
 
 	<tr><th>Sample:</th><td>
 		<? if (!$RO || $row['sample_weight']!==null) { ?>

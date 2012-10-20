@@ -122,6 +122,12 @@ function authenticate_user($user,$password) {
 	return sha1($password) == $user['password'];
 }
 
+function fetch_product_nutrient($prodid,$nutid) {
+	return row0('* FROM product_nutrient'
+	            .' WHERE product='.sql($prodid)
+	            .' AND nutrient='.sql($nutid));
+}
+
 function product_nutrient_on_change($prodid,$nutid,$value,$nutname=null) {
 	if ($nutname===null) {
 		$nutname = value('name FROM nutrient'
@@ -216,14 +222,14 @@ function product_nutrient_link_to_children($prodid,$nutid,$nutname=null) {
 }
 
 function product_nutrient_link_multiplier($prodid,$parentid) {
-	$par = row('sample_weight,sample_volume,refuse_weight,refuse_volume'
-	           .' FROM product WHERE id='.sql($parentid));
-	$prod = row('sample_weight,sample_volume,refuse_weight,refuse_volume'
-	            .' FROM product WHERE id='.sql($prodid));
-	if ($par['sample_weight']!==null && $prod['sample_weight']!==null) {
+	$par = row0('sample_weight,sample_volume,refuse_weight,refuse_volume'
+	            .' FROM product WHERE id='.sql($parentid));
+	$prod = row0('sample_weight,sample_volume,refuse_weight,refuse_volume'
+	             .' FROM product WHERE id='.sql($prodid));
+	if ($par!==null && $par['sample_weight']!==null && $prod['sample_weight']!==null) {
 		$multiplier = ($prod['sample_weight']-ifnull($prod['refuse_weight'],0))
 		              / ($par['sample_weight']-ifnull($par['refuse_weight'],0));
-	} else if ($par['sample_volume']!==null && $prod['sample_volume']!==null) {
+	} else if ($prod!==null && $par['sample_volume']!==null && $prod['sample_volume']!==null) {
 		$multiplier = ($prod['sample_volume']-ifnull($prod['refuse_volume'],0))
 		              / ($par['sample_volume']-ifnull($par['refuse_volume'],0));
 	} else {

@@ -263,7 +263,13 @@
 		?>
 	</td></tr>
 
-	<tr><th>Variations:</th><td><?
+	<tr><th>Variations:<?
+		if ($RO) {
+			echo '<span class="noprint">';
+			echo '<br /><a href="'.html('?parent='.$row['id']).'">[add new]</a>';
+			echo '</span>';
+		}
+	?></th><td><?
 		$j = 0;
 		foreach (select('id,name FROM product WHERE parent='.sql($row['id'])) as $i=>$x) {
 			if ($j) echo '<br />';
@@ -278,11 +284,6 @@
 		}
 		if (!$j) {
 			echo '(none)';
-			if ($RO) {
-				echo '<span class="noprint">';
-				echo ' <a href="'.html('?parent='.$row['id']).'">[add new]</a>';
-				echo '</span>';
-			}
 		}
 	?></td></tr>
 </table>
