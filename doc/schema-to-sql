@@ -327,6 +327,7 @@ def print_table(tablename,fields):
 			sys.stderr.write('%s:%d: incorrect number of data values (expected %d, got %d; ignoring line): %s\n'%(filename,lineno, len(fields), len(values), repr(line)))
 			continue
 
+		if outlineno==0 and mysql: sys.stdout.write('SET NAMES utf8;\n');
 		if outlineno==0 or (recordgroup>0 and (outlineno%recordgroup)==0):
 			if outlineno>0:
 				sys.stdout.write(';\n')
@@ -371,9 +372,6 @@ def print_schema(tablename,prevtables,tables,written):
 		if f[4]:
 			print_schema(f[4][0],prevtables,tables,written)
 
-	if len(written)==1 and mysql:
-		sys.stdout.write('SET NAMES utf8;\n\n');
-
 
 	#
 	# dump table
@@ -396,6 +394,7 @@ def print_schema(tablename,prevtables,tables,written):
 			extra = ' ENGINE = InnoDB';
 
 		if commalist:
+			if mysql: sys.stdout.write('SET NAMES utf8;\n');
 			sys.stdout.write('CREATE TABLE %s (\n\t%s\n)%s;\n'%(sqlfield(tableprefix+tablename),',\n\t'.join(commalist),extra))
 			if commentsyntax==1:
 				for field in fields:
@@ -448,6 +447,7 @@ def print_schema(tablename,prevtables,tables,written):
 			commalist.append(extra)
 
 		if commalist:
+			if mysql: sys.stdout.write('SET NAMES utf8;\n');
 			sys.stdout.write('ALTER TABLE %s \n\t%s\n;\n'%(sqlfield(tableprefix+tablename),',\n\t'.join(commalist)))
 			sys.stdout.write('\n');
 
