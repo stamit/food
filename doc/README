@@ -55,8 +55,9 @@ To update your local database "food" after getting a new version of this code:
 To import the USDA data into the "food" database on localhost when all tables
 have already been created:
 
-	unzip sr25.zip
+	mkdir sr25
 	cd sr25
+	unzip ~/sr25.zip
 	../schema-to-sql usda_ ../usda-sr25.txt ../usda-sr25.txt | mysql usda
 
 To create the database tables when they do not already exist, you would use:
