@@ -235,6 +235,7 @@ glaze_weight            FLOAT - Y	--g
 net_weight              FLOAT - Y	--g
 net_volume              FLOAT - Y	--ml
 usda_source             A 5 Y  @usda_nut_data.NDB_No   -- you MUST convert the MySQL tables to use the utf8 encoding. encodings must match in order to do joins
+default_source		INT - Y
 market_weight           FLOAT - Y
 sample_weight           FLOAT - Y	--g
 sample_volume           FLOAT - Y	--ml
