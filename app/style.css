@@ -229,14 +229,29 @@ table.fields td.buttons .left {
 	margin-right: 2px;
 }
 table.fields tr.empty,
-table.fields tr.linked input {
+table.fields tr.empty input {
 	background-color: #FFFFFF;
-	color: #B0B0B0;
+	color: #C0C0C0;
+}
+table.fields tr.empty.editing,
+table.fields tr.empty.editing input {
+	background-color: #FFFFFF;
+	color: #505050;
+}
+table.fields tr.ndb,
+table.fields tr.ndb input {
+	background-color: #FFFFFF;
+	color: #0000FF;
 }
 table.fields tr.linked,
 table.fields tr.linked input {
 	background-color: #FFFFFF;
-	color: #0000FF;
+	color: #008000;
+}
+table.fields tr.linked.empty,
+table.fields tr.linked.empty input {
+	background-color: #FFFFFF;
+	color: #A0E0A0;
 }
 
 
