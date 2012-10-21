@@ -311,13 +311,7 @@
 		$variations = select('id,name FROM product WHERE parent='.sql($row['id']));
 	?>
 
-	<tr><th>Variations:<?
-		if ($RO) {
-			echo '<span class="noprint">';
-			echo '<br /><a href="'.html('product?parent='.$row['id']).'">[add new]</a>';
-			echo '</span>';
-		}
-	?></th><td><?
+	<tr><th>Variations:</th><td><?
 		$j = 0;
 		foreach ($variations as $i=>$x) {
 			if ($j) echo '<br />';
