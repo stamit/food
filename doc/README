@@ -6,7 +6,7 @@ into a new database.
 PostgreSQL. If the tables are set up properly, I assume they should be
 accessible without any change in code, thanks to lib/adodb.
 
-`all' and `part?.txt' is a list of all INFOODS nutrients.
+`INFOODS' is a list of all INFOODS nutrient tags.
 
 The contents of `usda-sr25.txt' come from the PDF in the USDA nutrient database
 distribution from this URL:
