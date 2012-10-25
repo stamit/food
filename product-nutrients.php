@@ -1,28 +1,6 @@
 <? $AUTH=true;
 	require_once 'app/init.php';
 
-	$proto = array(
-		'usda_source'=>array('zeropad()',array(),5,  ''=>null),
-		'sample_weight'=>'float',
-		'sample_volume'=>'float',
-		'refuse_weight'=>'float',
-		'refuse_volume'=>'float',
-	);
-	$nutids=array();
-	$basetables=array();
-	foreach (select('id,name,basetable FROM nutrient WHERE basetable') as $x) {
-		$proto[$x['name']] = 'float';
-		$nutids[$x['name']] = $x['id'];
-		if ($x['basetable']) $basetables[$x['name']] = true;
-	}
-	$row = given('product.id', $proto);
-
-	$old = fetch('product.id', $row);
-	$own_record = ($row['id']===null) ||
-	              ( $old['user_id']!==null
-	                && $old['user_id']==$_SESSION['user_id'] ) || 
-	              has_right('admin');
-
 	function product_fooddb_import($prodid) {
 		$pro = fetch('product.id',$prodid);
 		if ($pro===null) return;
@@ -164,6 +142,32 @@
 		}
 		store('product.id',array('id'=>$prodid,'default_source'=>null));
 	}
+
+
+################################################################################	
+
+
+	$proto = array(
+		'usda_source'=>array('zeropad()',array(),5,  ''=>null),
+		'sample_weight'=>'float',
+		'sample_volume'=>'float',
+		'refuse_weight'=>'float',
+		'refuse_volume'=>'float',
+	);
+	$nutids=array();
+	$basetables=array();
+	foreach (select('id,name,basetable FROM nutrient WHERE basetable') as $x) {
+		$proto[$x['name']] = 'float';
+		$nutids[$x['name']] = $x['id'];
+		if ($x['basetable']) $basetables[$x['name']] = true;
+	}
+	$row = given('product.id', $proto);
+
+	$old = fetch('product.id', $row);
+	$own_record = ($row['id']===null) ||
+	              ( $old['user_id']!==null
+	                && $old['user_id']==$_SESSION['user_id'] ) || 
+	              has_right('admin');
 
 	if (posting()) try {
 		if ($old===null)
@@ -362,7 +366,7 @@
 					   .' WHERE product='.sql($row['id'])
 					   .' AND nutrient='.sql($nut['id']));
 				$name = $nut['name'];
-				$value = $row[$nut['name']];
+				$value = $pn['value'];
 
 				$class=array();
 
