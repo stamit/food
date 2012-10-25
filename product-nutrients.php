@@ -147,21 +147,24 @@
 ################################################################################	
 
 
-	$proto = array(
+	$row = given('product.id', array(
 		'usda_source'=>array('zeropad()',array(),5,  ''=>null),
 		'sample_weight'=>'float',
 		'sample_volume'=>'float',
 		'refuse_weight'=>'float',
 		'refuse_volume'=>'float',
-	);
+	));
+
 	$nutids=array();
+	$nuts=array();
 	$basetables=array();
-	foreach (select('id,name,basetable FROM nutrient WHERE basetable') as $x) {
-		$proto[$x['name']] = 'float';
-		$nutids[$x['name']] = $x['id'];
-		if ($x['basetable']) $basetables[$x['name']] = true;
+	foreach (select('id,name,basetable FROM nutrient') as $x) {
+		if ($_POST[$x['name']]!==null) {
+			$nutids[$x['name']] = $x['id'];
+			$nuts[$x['name']] = ($_POST[$x['name']]!='') ? floatval($_POST[$x['name']]) : null;
+			if ($x['basetable']) $basetables[$x['name']] = true;
+		}
 	}
-	$row = given('product.id', $proto);
 
 	$old = fetch('product.id', $row);
 	$own_record = ($row['id']===null) ||
@@ -236,31 +239,27 @@
 			}
 
 			if (correct()) {
-				$row2 = array();
-				foreach ($row as $name => $value) {
-					if ($nutids[$name]===null) {
-						$row2[$name] = $value;
-					} else {
-						$pn = row0('* FROM product_nutrient'
-							   .' WHERE product='.sql($row['id'])
-							   .' AND nutrient='.sql($nutids[$name]));
-						if ($pn==null) {
-							$pn = array(
-								'product'=>$row['id'],
-								'nutrient'=>$nutids[$name],
-								'source'=>0,
-							);
-						}
+				foreach ($nuts as $name => $value) {
+					error_log(repr($name).' - '.repr($value));
+					$pn = row0('* FROM product_nutrient'
+						   .' WHERE product='.sql($row['id'])
+						   .' AND nutrient='.sql($nutids[$name]));
+					if ($pn==null) {
+						$pn = array(
+							'product'=>$row['id'],
+							'nutrient'=>$nutids[$name],
+							'source'=>0,
+						);
+					}
 
-						if ($pn['source']==0) {
-							if ($basetables[$name]) $row2[$name] = $value;
-							$pn['value'] = $value;
-							store('product_nutrient.id',$pn);
-							product_nutrient_on_change($row['id'],$nutids[$name],$value);
-						}
+					if ($pn['source']==0) {
+						if ($basetables[$name]) $row[$name] = $value;
+						$pn['value'] = $value;
+						#if ($pn['nutrient']==60)
+						store('product_nutrient.id',$pn);
+						product_nutrient_on_change($row['id'],$nutids[$name],$value);
 					}
 				}
-				$row = $row2;
 
 				$row['id'] = (int)store('product.id',$row);
 
