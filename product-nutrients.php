@@ -240,7 +240,6 @@
 
 			if (correct()) {
 				foreach ($nuts as $name => $value) {
-					error_log(repr($name).' - '.repr($value));
 					$pn = row0('* FROM product_nutrient'
 						   .' WHERE product='.sql($row['id'])
 						   .' AND nutrient='.sql($nutids[$name]));
