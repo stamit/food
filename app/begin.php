@@ -31,7 +31,6 @@ if ( $DEPTH <= 0 && !$INLINE_REQUEST ) {
 	$DEFAULT_CSS = array(
 		'/lib/cal/calendar-system.css',
 	);
-
 ?><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <head profile="http://www.w3.org/2005/10/profile">
 	<meta http-equiv="Content-Script-Type" content="text/javascript">
@@ -54,7 +53,7 @@ if ( $DEPTH <= 0 && !$INLINE_REQUEST ) {
 <body onload="convert_links(document);<? if (strlen($ONLOAD)) echo html($ONLOAD); ?>">
 <div class="wrapper">
 
-<?
+<? if (!$TROUBLE) {
 	$TABS = array(
 		'/persons' => 'persons',
 		'/stores' => 'stores',
@@ -106,7 +105,7 @@ if ( $DEPTH <= 0 && !$INLINE_REQUEST ) {
 		}
 		echo '</ul>';
 	}
-?>
+} ?>
 
 <div class="wrapper2">
 <div class="wrapper3">

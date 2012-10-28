@@ -40,7 +40,7 @@ function my_error_handler($errno, $err_str, $err_file, $err_line) {
 set_error_handler('my_error_handler');
 
 function my_exception_handler($exception) {
-	global $URL;
+	global $URL, $TROUBLE, $STOPWATCH;
 
 	error_log('EXCEPTION: '.$exception->getMessage());
 	$lines = explode("\n",$exception->getTraceAsString());
@@ -52,6 +52,7 @@ function my_exception_handler($exception) {
 		include 'app/after.php';
 	} else {
 		header(' ', true, 500);
+		$TROUBLE=1;
 		include 'trouble.php';
 	}
 	exit;
